@@ -16,7 +16,13 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* Linting */
+    /* Alias */
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
+    /* Strict */
+    "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
