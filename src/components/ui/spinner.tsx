@@ -15,7 +15,7 @@ export function Spinner({ size = 'md', label }: SpinnerProps) {
   return (
     <span role="status" aria-live="polite">
       <span
-        className={`inline-block animate-spin rounded-full border-solid border-slate-300 border-t-blue-600 ${tamanos[size]}`}
+        className={`inline-block animate-spin rounded-full border-solid border-salvia-300 border-t-pino-600 ${tamanos[size]}`}
         aria-hidden="true"
       />
       <span className="sr-only">{label ?? 'Cargando…'}</span>

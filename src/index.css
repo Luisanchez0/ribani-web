@@ -1,1 +1,57 @@
 @import 'tailwindcss';
+
+/*
+  Sistema de diseño RIBANI (ver AGENTS.md → Stack fijo: Tailwind CSS).
+
+  Paleta del cliente: verdes RIBANI (#5BAB88 y #02542D) para marca y
+  superficies, salvia para la base neutra. El verde es el color
+  protagonista; rojo y ámbar quedan reservados para estados semánticos.
+*/
+@theme {
+  --font-display: 'Fraunces', ui-serif, Georgia, serif;
+  --font-sans: 'Atkinson Hyperlegible', ui-sans-serif, system-ui, sans-serif;
+
+  /* Marca: verde RIBANI → superficie oscura del sidebar y botones.
+     #5BAB88 define la escala media; #02542D ancla el extremo oscuro. */
+  --color-pino-50: #f2f8f4;
+  --color-pino-100: #dfeee5;
+  --color-pino-200: #c2ddcc;
+  --color-pino-300: #9cc8b0;
+  --color-pino-400: #6db291;
+  --color-pino-500: #5bab88;
+  --color-pino-600: #2e7d55;
+  --color-pino-700: #1f6343;
+  --color-pino-800: #12482f;
+  --color-pino-900: #02542d;
+  --color-pino-950: #02331c;
+
+  /* Base neutra: salvia verdosa en lugar del gris azulado genérico */
+  --color-salvia-50: #f6f8f6;
+  --color-salvia-100: #e9eee9;
+  --color-salvia-200: #d3dcd3;
+  --color-salvia-300: #b2c1b2;
+  --color-salvia-400: #8ba18b;
+  --color-salvia-500: #6d836d;
+  --color-salvia-600: #576a57;
+  --color-salvia-700: #485648;
+  --color-salvia-800: #3c473c;
+  --color-salvia-900: #343d34;
+  --color-salvia-950: #1a201a;
+
+  /* Acento cálido para alertas activas y focos de atención */
+  --color-ocre-400: #d9a13b;
+  --color-ocre-500: #c08a26;
+  --color-ocre-600: #a06f1a;
+
+  --animate-pulse-slow: pulse-slow 2.5s ease-in-out infinite;
+
+  @keyframes pulse-slow {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.4;
+    }
+  }
+}

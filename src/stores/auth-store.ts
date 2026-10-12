@@ -2,7 +2,6 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 /**
- * Zustand está reservado EXCLUSIVAMENTE para la sesión (ver AGENTS.md):
  * token, usuario, rol y estado de autenticación. Los datos de dominio
  * (medicamentos, alertas, ubicaciones…) pertenecen a TanStack Query.
  *

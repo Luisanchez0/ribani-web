@@ -13,10 +13,10 @@ export function Topbar({ onAbrirMenu }: TopbarProps) {
   const { cerrarSesion, pendiente } = useLogout()
 
   return (
-    <header className="flex h-14 items-center gap-3 border-b border-slate-200 bg-white px-4">
+    <header className="flex h-14 items-center gap-3 border-b border-salvia-200 bg-white px-4">
       <button
         type="button"
-        className="rounded-md p-2 text-slate-600 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 lg:hidden"
+        className="rounded-md p-2 text-salvia-700 hover:bg-salvia-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600 lg:hidden"
         aria-label="Abrir menú"
         onClick={onAbrirMenu}
       >
@@ -38,9 +38,9 @@ export function Topbar({ onAbrirMenu }: TopbarProps) {
 
       <div className="ml-auto flex items-center gap-3">
         {usuario && (
-          <span className="hidden text-sm text-slate-700 sm:inline">
+          <span className="hidden text-sm text-pino-900 sm:inline">
             {usuario.nombre} {usuario.apellido}
-            <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+            <span className="ml-2 rounded-full bg-pino-50 px-2 py-0.5 text-xs font-medium text-pino-700 ring-1 ring-pino-200">
               {usuario.rol.nombre}
             </span>
           </span>
