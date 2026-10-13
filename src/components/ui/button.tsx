@@ -5,11 +5,11 @@ type ButtonSize = 'sm' | 'md'
 
 const variantes: Record<ButtonVariant, string> = {
   primary:
-    'bg-blue-600 text-white hover:bg-blue-700 focus-visible:outline-blue-600',
+    'bg-pino-600 text-white hover:bg-pino-700 focus-visible:outline-pino-600',
   secondary:
-    'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus-visible:outline-slate-600',
+    'border border-salvia-300 bg-white text-pino-900 hover:bg-salvia-100 focus-visible:outline-pino-600',
   danger:
-    'bg-red-600 text-white hover:bg-red-700 focus-visible:outline-red-600',
+    'bg-red-700 text-white hover:bg-red-800 focus-visible:outline-red-700',
 }
 
 const tamanos: Record<ButtonSize, string> = {

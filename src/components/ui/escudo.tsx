@@ -1,0 +1,33 @@
+import type { ComponentProps } from 'react'
+
+/**
+ * Escudo provisional de RIBANI (el logo definitivo está pendiente).
+ * Verde de marca: #5BAB88 sobre #02542D, marca de verificación blanca.
+ */
+export function EscudoRibani({ className = '', ...props }: ComponentProps<'svg'>) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 48 48"
+      fill="none"
+      className={className}
+      {...props}
+    >
+      <path
+        d="M24 3.5 40.5 9v13.2c0 10.4-6.8 18.1-16.5 22.3C14.3 40.3 7.5 32.6 7.5 22.2V9L24 3.5Z"
+        fill="#02542D"
+      />
+      <path
+        d="M24 7.6 36.7 11.8v10.4c0 8.1-5.2 14.3-12.7 17.8-7.5-3.5-12.7-9.7-12.7-17.8V11.8L24 7.6Z"
+        fill="#5BAB88"
+      />
+      <path
+        d="m16.5 23.6 5.4 5.4 9.6-10.4"
+        stroke="#fff"
+        strokeWidth="3.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}

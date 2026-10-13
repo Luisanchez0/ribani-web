@@ -36,7 +36,13 @@ export function abrirStreamSse(
   const controller = new AbortController()
   const token = useAuthStore.getState().token
 
-  void fetchEventSource(`${env.apiUrl}${path}`, {
+  // Diferencia con axios (api-client normaliza la unión baseURL+url): con
+  // fetch nativo, apiUrl='http://host:3000/' + path='/x' produce dobles
+  // slashes y el backend (rutas de raíz) responde 404. new URL(path, base)
+  // resuelve '/x' relativo a la base sin duplicar la barra.
+  const url = new URL(path, env.apiUrl.endsWith('/') ? env.apiUrl : `${env.apiUrl}/`)
+
+  void fetchEventSource(url.toString(), {
     method: 'GET',
     headers: {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),

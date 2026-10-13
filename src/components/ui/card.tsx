@@ -7,7 +7,7 @@ export function Card({
 }: ComponentProps<'div'>) {
   return (
     <div
-      className={`rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6 ${className}`}
+      className={`rounded-lg border border-salvia-200 bg-white p-4 shadow-sm sm:p-6 ${className}`}
       {...props}
     >
       {children}
@@ -22,7 +22,7 @@ export function CardTitle({
 }: ComponentProps<'h2'>) {
   return (
     <h2
-      className={`text-lg font-semibold text-slate-900 ${className}`}
+      className={`font-display text-lg font-semibold text-pino-900 ${className}`}
       {...props}
     >
       {children}

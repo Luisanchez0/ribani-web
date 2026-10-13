@@ -4,15 +4,12 @@ import { Outlet } from 'react-router-dom'
 import { Sidebar } from './sidebar'
 import { Topbar } from './topbar'
 
-/**
- * Layout global de la aplicación (ver AGENTS.md → Layout).
- * Las páginas nunca duplican sidebar ni topbar.
- */
+
 export function Shell() {
   const [menuAbierto, setMenuAbierto] = useState(false)
 
   return (
-    <div className="flex min-h-dvh bg-slate-100">
+    <div className="flex min-h-dvh bg-salvia-50">
       <Sidebar abierto={menuAbierto} onCerrar={() => setMenuAbierto(false)} />
 
       <div className="flex min-w-0 flex-1 flex-col">

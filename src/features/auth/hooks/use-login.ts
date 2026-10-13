@@ -7,7 +7,6 @@ import { authApi } from '../api/auth.api'
 import { esDesafioDosPasos } from '../types'
 import type { CredencialesLogin } from '../types'
 
-/** Recupera el destino original guardado por RequireAuth, si existe. */
 function destinoDesdeEstado(estado: unknown): string {
   if (
     typeof estado === 'object' &&
@@ -31,8 +30,6 @@ export function useLogin() {
       authApi.login(credenciales),
     onSuccess: (respuesta) => {
       if (esDesafioDosPasos(respuesta)) {
-        // El flujo de 2FA (POST /auth/2fa/login) se implementará en esta
-        // feature; por ahora la UI informa al usuario.
         return
       }
 
