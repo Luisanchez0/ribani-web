@@ -4,13 +4,15 @@ import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { IconoFamiliares } from '@/lib/iconos'
 
+import { DosPasosAdultoModal } from '../components/dos-pasos-adulto-modal'
 import { TablaRelacionesAdmin } from '../components/tabla-relaciones-admin'
 import {
   useActualizarVinculo,
   useDesvincularFamiliar,
   useVinculos,
 } from '../hooks'
-import type { VinculoAdmin } from '../types'
+import { adultoDesdeVinculoAdmin } from '../types'
+import type { AdultoVinculado, VinculoAdmin } from '../types'
 
 
 export function RelacionesAdminPage() {
@@ -21,6 +23,7 @@ export function RelacionesAdminPage() {
   const [errorAccion, setErrorAccion] = useState<string | null>(null)
   const [busqueda, setBusqueda] = useState('')
   const [estadoFiltro, setEstadoFiltro] = useState('')
+  const [adultoDosPasos, setAdultoDosPasos] = useState<AdultoVinculado | null>(null)
 
  
   const filtrados = useMemo(() => {
@@ -185,6 +188,17 @@ export function RelacionesAdminPage() {
           ocupados={ocupados}
           onRevocar={revocar}
           onEliminar={eliminar}
+          onDosPasos={(vinculo) => setAdultoDosPasos(adultoDesdeVinculoAdmin(vinculo))}
+        />
+      )}
+
+      {/* key distinta por adulto: remonta el modal y reinicia su estado. */}
+      {adultoDosPasos && (
+        <DosPasosAdultoModal
+          key={adultoDosPasos.id}
+          abierto={adultoDosPasos !== null}
+          adulto={adultoDosPasos}
+          onCerrar={() => setAdultoDosPasos(null)}
         />
       )}
     </section>

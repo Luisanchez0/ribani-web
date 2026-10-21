@@ -2,26 +2,13 @@
  * Contrato de la feature de usuarios, tomado de src/types/api.d.ts
  * (generado con openapi-typescript desde ribani-server).
  *
- * El OpenAPI no define schemas de respuesta, así que los tipos de lectura
- * reflejan exactamente lo que devuelve el backend verificado en runtime
- * (GET /usuarios y GET /roles con sesión admin).
+ * Usuarios/perfil provienen del contrato generado. El tipo de lectura de
+ * roles sigue pendiente de su esquema de respuesta en el backend.
  */
 import type { components, operations } from '@/types/api'
 
 /** GET /usuarios — fila de usuario (snake_case, según Prisma). */
-export type UsuarioLista = {
-  id: string
-  rol_id: number
-  nombre: string
-  apellido: string
-  email: string
-  telefono: string | null
-  email_verificado_en: string | null
-  activo: boolean
-  ultimo_acceso_en: string | null
-  created_at: string
-  updated_at: string
-}
+export type UsuarioLista = components['schemas']['UsuarioRespuestaDto']
 
 /** GET /roles — rol con sus permisos anidados. */
 export type RolLista = {
@@ -38,6 +25,12 @@ export type RolLista = {
     descripcion: string | null
   }>
 }
+
+/** PATCH /usuarios/perfil/password — body (CambiarPasswordDto). */
+export type CambiarPassword = components['schemas']['CambiarPasswordDto']
+
+/** PATCH /usuarios/perfil — body (UpdatePerfilDto): solo datos personales del perfil propio. */
+export type ActualizarPerfil = components['schemas']['UpdatePerfilDto']
 
 /** POST /usuarios — body (CreateUsuarioDto). */
 export type CrearUsuario = components['schemas']['CreateUsuarioDto']

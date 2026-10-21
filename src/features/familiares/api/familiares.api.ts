@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/api-client'
+import type { components } from '@/types/api'
 
 import type {
   ActualizarVinculo,
@@ -43,16 +44,10 @@ import type {
  * `otpauthUrl` se renderiza como QR para que el adulto lo escanee con su
  * app authenticator; `secret` se ofrece como texto de respaldo.
  */
-export type SetupDosPasos = {
-  secret: string
-  otpauthUrl: string
-  mensaje: string
-}
+export type SetupDosPasos = components['schemas']['ConfigDosPasosDto']
 
 
-export type ConfirmarDosPasosBody = {
-  code: string
-}
+export type ConfirmarDosPasosBody = components['schemas']['VerifyTwoFactorDto']
 const mapearPersona = (
   usuario: VinculoAdminRespuesta['usuarios_adulto_familiares_familiar_idTousuarios'],
 ) => ({

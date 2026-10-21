@@ -1,40 +1,17 @@
-import type { UsuarioSesion } from '@/stores/auth-store'
+import type { components } from '@/types/api'
 
-export type CredencialesLogin = {
-  email: string
-  password: string
-}
-
-export type RefrescoSesion = {
-  refreshToken: string
-}
+export type CredencialesLogin = components['schemas']['LoginDto']
+export type RefrescoSesion = components['schemas']['RefreshTokenDto']
 
 
-export type DatosRegistro = {
-  nombre: string
-  apellido: string
-  email: string
-  telefono: string
-  password: string
-  rolCodigo: string
-}
+export type DatosRegistro = components['schemas']['RegisterDto']
 
 export const ROL_FAMILIAR_ENCARGADO = 'FAMILIAR_ENCARGADO' as const
 
-export type RespuestaTokens = {
-  accessToken: string
-  refreshToken: string
-  tokenType: string
-  expiresIn: number
-  user: UsuarioSesion
-}
+export type RespuestaTokens = components['schemas']['TokensRespuestaDto']
 
 /** Variante de login cuando la cuenta tiene 2FA activado. */
-export type RespuestaDesafioDosPasos = {
-  twoFactorRequired: true
-  challengeToken: string
-  expiresIn: number
-}
+export type RespuestaDesafioDosPasos = components['schemas']['DesafioDosPasosDto']
 
 export type RespuestaLogin = RespuestaTokens | RespuestaDesafioDosPasos
 
@@ -43,3 +20,12 @@ export function esDesafioDosPasos(
 ): respuesta is RespuestaDesafioDosPasos {
   return 'twoFactorRequired' in respuesta
 }
+
+/**
+ * POST /auth/2fa/setup — secreto TOTP nuevo (el backend lo guarda cifrado
+ * en dos_factor_secret) y la URI otpauth para el QR del authenticator.
+ */
+export type ConfigDosPasos = components['schemas']['ConfigDosPasosDto']
+
+/** POST /auth/2fa/verify y /auth/2fa/disable — respuesta del backend. */
+export type RespuestaDosPasos = components['schemas']['EstadoDosPasosDto']

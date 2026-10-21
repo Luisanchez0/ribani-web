@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 
 import { abrirStreamSse } from '@/lib/sse'
+import { useAuthStore } from '@/stores/auth-store'
 
 import { clavesUbicaciones } from './use-ubicaciones'
 import type { EventoUbicacion } from '../types'
@@ -36,13 +37,14 @@ const mapearEvento = (cru: EventoUbicacion): EventoUbicacion => ({
  */
 export function useUbicacionesStream(adultoId: string) {
   const queryClient = useQueryClient()
+  const sessionRevision = useAuthStore((state) => state.sessionRevision)
   const [estado, setEstado] = useState<EstadoStream>('conectando')
   const [ultimoEventoEn, setUltimoEventoEn] = useState<string | null>(null)
   // Referencia estable para no reabrir la conexión en cada render.
   const cerrarStream = useRef<(() => void) | null>(null)
 
   useEffect(() => {
-    if (!adultoId) return
+    if (!adultoId || !useAuthStore.getState().token) return
 
     let reintentos = 0
     let temporizador: ReturnType<typeof setTimeout> | null = null
@@ -57,10 +59,12 @@ export function useUbicacionesStream(adultoId: string) {
         `/ubicaciones/stream?adultoId=${encodeURIComponent(adultoId)}`,
         {
           onOpen: () => {
+            if (abortado) return
             reintentos = 0
             setEstado('conectado')
           },
           onMessage: (evento) => {
+            if (abortado) return
             // El backend emite type: 'ubicacion' con JSON en data.
             if (evento.event && evento.event !== 'ubicacion') return
 
@@ -79,6 +83,7 @@ export function useUbicacionesStream(adultoId: string) {
             }
           },
           onError: () => {
+            if (abortado) return
             setEstado('error')
             cerrarStream.current = null
 
@@ -106,7 +111,7 @@ export function useUbicacionesStream(adultoId: string) {
       cerrarStream.current?.()
       cerrarStream.current = null
     }
-  }, [adultoId, queryClient])
+  }, [adultoId, queryClient, sessionRevision])
 
   return { estado, ultimoEventoEn }
 }

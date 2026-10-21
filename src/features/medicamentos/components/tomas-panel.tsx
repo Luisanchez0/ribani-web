@@ -61,6 +61,10 @@ function etiquetaEstado(estado: Toma['estado']): string {
   switch (estado) {
     case 'PENDIENTE':
       return 'Pendiente'
+    case 'POSPUESTA':
+      return 'Pospuesta'
+    case 'CANCELADA':
+      return 'Cancelada'
     case 'TOMADA':
       return 'Tomada'
     case 'OMITIDA':
@@ -71,6 +75,10 @@ function etiquetaEstado(estado: Toma['estado']): string {
 function claseEstado(estado: Toma['estado']): string {
   switch (estado) {
     case 'PENDIENTE':
+      return 'bg-salvia-100 text-salvia-700'
+    case 'POSPUESTA':
+      return 'bg-amber-100 text-amber-800'
+    case 'CANCELADA':
       return 'bg-salvia-100 text-salvia-700'
     case 'TOMADA':
       return 'bg-pino-100 text-pino-800'
@@ -127,7 +135,7 @@ export function TomasPanel({ medicamentos }: TomasPanelProps) {
   // El estado se filtra en cliente; el rango de fechas ya viaja al
   // backend por query params (filtrosBackend en la key del query).
   const tomasFiltradas = (tomas.data ?? []).filter(
-    (toma) => filtroEstado === 'TODAS' || toma.estado === filtroEstado,
+    (toma) => filtroEstado === 'TODAS' || toma.estado === filtroEstado || (filtroEstado === 'PENDIENTE' && toma.estado === 'POSPUESTA'),
   )
 
   function manejarError(mensajeBase: string, error: unknown) {
@@ -288,7 +296,7 @@ export function TomasPanel({ medicamentos }: TomasPanelProps) {
           <ul className="divide-y divide-salvia-100">
             {tomasFiltradas.map((toma) => {
               const ocupado = ocupados.has(toma.id)
-              const esPendiente = toma.estado === 'PENDIENTE'
+              const esPendiente = toma.estado === 'PENDIENTE' || toma.estado === 'POSPUESTA'
 
               return (
                 <li
@@ -301,6 +309,7 @@ export function TomasPanel({ medicamentos }: TomasPanelProps) {
                     </p>
                     <p className="text-xs text-salvia-600">
                       {formatFechaHora(toma.programada_para)}
+                      {toma.estado === 'POSPUESTA' ? ` · aviso ${formatFechaHora(toma.recordar_en)}` : ''}
                       {toma.estado === 'TOMADA' && toma.tomada_en
                         ? ` · registrada ${formatFechaHora(toma.tomada_en)}`
                         : ''}
@@ -359,7 +368,7 @@ export function TomasPanel({ medicamentos }: TomasPanelProps) {
                         <Button
                           variant="secondary"
                           size="sm"
-                          disabled={ocupado}
+                          disabled={ocupado || toma.estado !== 'PENDIENTE'}
                           onClick={() => {
                             setErrorAccion(null)
                             setTomaEditando(toma)
@@ -370,7 +379,7 @@ export function TomasPanel({ medicamentos }: TomasPanelProps) {
                         <Button
                           variant="danger"
                           size="sm"
-                          disabled={ocupado}
+                          disabled={ocupado || toma.estado !== 'PENDIENTE'}
                           onClick={() => {
                             const confirmado = window.confirm(
                               `¿Eliminar la toma pendiente de las ${formatFechaHora(toma.programada_para)}?`,

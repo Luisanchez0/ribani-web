@@ -38,6 +38,7 @@ const itemsPanel: ItemNavegacion[] = [
 ]
 
 const itemsPanelFamiliar: ItemNavegacion[] = [
+  { to: '/panel/whatsapp', etiqueta: 'WhatsApp', Icono: IconoContactos },
   { to: '/panel', etiqueta: 'Inicio', Icono: IconoInicio, end: true },
   { to: '/panel/ubicaciones', etiqueta: 'Ubicaciones', Icono: IconoUbicaciones },
   { to: '/panel/alertas', etiqueta: 'Alertas', Icono: IconoAlertas },
@@ -46,10 +47,11 @@ const itemsPanelFamiliar: ItemNavegacion[] = [
   { to: '/panel/contactos', etiqueta: 'Contactos', Icono: IconoContactos },
   { to: '/panel/dispositivos', etiqueta: 'Dispositivos', Icono: IconoDispositivos },
   { to: '/panel/familiares', etiqueta: 'Familiares', Icono: IconoFamiliares },
-]
+ ]
 
 /** Sección Administración del sistema (solo ADMINISTRADOR). */
 const itemsAdmin: ItemNavegacion[] = [
+  { to: '/admin/whatsapp', etiqueta: 'WhatsApp', Icono: IconoContactos },
   { to: '/admin', etiqueta: 'Usuarios', Icono: IconoUsuarios, end: true },
   { to: '/admin/ubicaciones', etiqueta: 'Ubicaciones', Icono: IconoUbicaciones },
   { to: '/admin/relaciones', etiqueta: 'Relaciones familiares', Icono: IconoFamiliares },

@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "test": "node --import ./test/register-typescript.mjs --test test/*.test.mjs",
+    "api:types": "npx openapi-typescript@7.13.0 ../ribani-server/openapi.json -o src/types/api.d.ts",
     "preview": "vite preview"
   },
   "dependencies": {

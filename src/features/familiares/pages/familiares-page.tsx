@@ -19,7 +19,7 @@ import {
 } from '../hooks'
 import { useAuthStore } from '@/stores/auth-store'
 import { ROL_ADMINISTRADOR } from '@/app/guards/require-role'
-import type { VinculoAdmin, AdultoVinculado } from '../types'
+import { adultoDesdeVinculoAdmin, type VinculoAdmin, type AdultoVinculado } from '../types'
 
 type EstadoBadgeProps = {
   estado: 'ACTIVA' | 'PENDIENTE' | 'REVOCADA'
@@ -70,11 +70,13 @@ function TablaRelacionesAdmin({
   ocupados,
   onRevocar,
   onEliminar,
+  onDosPasos,
 }: {
   vinculos: VinculoAdmin[]
   ocupados: Set<string>
   onRevocar: (id: string) => void
   onEliminar: (id: string) => void
+  onDosPasos: (vinculo: VinculoAdmin) => void
 }) {
   return (
     <div className="rounded-lg border border-salvia-200 bg-white shadow-sm">
@@ -151,6 +153,16 @@ function TablaRelacionesAdmin({
                   </Td>
                   <Td>
                     <div className="flex flex-wrap items-center justify-end gap-2">
+                      {vinculo.estado === 'ACTIVA' && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          disabled={ocupado}
+                          onClick={() => onDosPasos(vinculo)}
+                        >
+                          2FA
+                        </Button>
+                      )}
                       <Button
                         variant="secondary"
                         size="sm"
@@ -320,6 +332,7 @@ export function FamiliaresPage() {
             ocupados={ocupadosVinculo}
             onRevocar={revocarVinculo}
             onEliminar={eliminarVinculo}
+            onDosPasos={(vinculo) => setAdultoDosPasos(adultoDesdeVinculoAdmin(vinculo))}
           />
         )}
 
@@ -327,6 +340,16 @@ export function FamiliaresPage() {
           abierto={modalInvitarAbierto}
           onCerrar={() => setModalInvitarAbierto(false)}
         />
+
+        {/* key distinta por adulto: remonta el modal y reinicia su estado. */}
+        {adultoDosPasos && (
+          <DosPasosAdultoModal
+            key={adultoDosPasos.id}
+            abierto={adultoDosPasos !== null}
+            adulto={adultoDosPasos}
+            onCerrar={() => setAdultoDosPasos(null)}
+          />
+        )}
       </section>
     )
   }

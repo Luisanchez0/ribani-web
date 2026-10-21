@@ -39,18 +39,7 @@ export type Horario = {
 }
 
 /** GET /tomas — registro de toma de un medicamento. */
-export type Toma = {
-  id: string
-  medicamento_id: string
-  horario_id: string | null
-  programada_para: string
-  estado: 'PENDIENTE' | 'TOMADA' | 'OMITIDA'
-  tomada_en: string | null
-  dosis_tomada: number | null
-  nota: string | null
-  created_at: string
-  updated_at: string
-}
+export type Toma = components['schemas']['TomaRespuestaDto']
 
 /** GET /medicamentos — filtros de query soportados por el backend. */
 export type FiltrosMedicamentos =
