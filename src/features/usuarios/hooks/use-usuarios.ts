@@ -27,9 +27,10 @@ export function useRoles() {
 }
 
 /** GET /usuarios?rol=ADULTO_MAYOR — adultos para el panel admin de ubicaciones. */
-export function useAdultos() {
+export function useAdultos(enabled = true) {
   return useQuery<UsuarioLista[]>({
     queryKey: clavesUsuarios.lista({ rol: 'ADULTO_MAYOR' }),
     queryFn: () => usuariosApi.listarAdultos(),
+    enabled,
   })
 }

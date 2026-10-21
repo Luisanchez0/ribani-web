@@ -35,6 +35,12 @@ El backend es `ribani-server`, construido con NestJS + Prisma.
 
 El frontend nunca accede directamente a Prisma, PostgreSQL o Supabase.
 
+WhatsApp se consume desde `features/whatsapp` mediante el backend Meta Cloud API.
+Incluye consentimiento propio, contactos administrados, historial y preferencias.
+Las rutas son `/panel/whatsapp` y `/admin/whatsapp`. Los familiares seleccionan
+adultos mediante `/familiares/mis-adultos`, sin requerir el listado administrativo
+de usuarios. Ver `../ribani-server/docs/whatsapp.md` antes de habilitar envíos reales.
+
 ---
 
 # Stack fijo (no negociable)
@@ -1341,20 +1347,26 @@ y probar el flujo real.
 
 # Estado actual del repositorio
 
-El repositorio contiene actualmente el template base de Vite.
+La SPA ya implementa autenticación y 2FA, configuración de cuenta, layout,
+guards, rutas familiares/administrativas y features de usuarios, roles,
+auditoría, familiares, contactos, medicamentos/horarios/tomas, dispositivos,
+alertas HTTP y ubicación SSE con mapas. Tailwind, alias, Axios, TanStack Query
+y Zustand ya están configurados: reutilizarlos.
 
-El `AGENTS.md` describe la arquitectura objetivo.
+El dashboard familiar y la pantalla de zonas seguras siguen pendientes.
+Las alertas aún no consumen SSE en el frontend. La existencia de una ruta
+o de un módulo no significa que su flujo esté terminado o verificado.
 
-Al trabajar en este repositorio:
+La revisión de estabilización agrega limpieza de caché al salir/cambiar de
+cuenta, protección ante respuestas de sesiones anteriores y cierre de SSE.
+Las pruebas nuevas usan `node:test` con TypeScript ya instalado y se ejecutan
+con `npm test` (verificadas en Node 22.23.2); no agregan dependencias.
 
-1. Instalar las dependencias del stack antes de utilizarlas.
-2. Crear la estructura definida en este documento.
-3. Reemplazar el demo inicial de Vite.
-4. No mantener el demo junto con la aplicación real.
-5. Configurar Tailwind antes de comenzar a utilizar sus clases.
-6. Configurar el alias `@/` en `vite.config.ts` y TypeScript antes de utilizarlo.
-7. Configurar el API client antes de crear features que consuman backend.
-8. Generar `api.d.ts` antes de implementar integraciones reales con la API.
+`src/types/api.d.ts` fue regenerado desde el backend actualizado. Autenticación,
+sesión y usuarios/perfil consumen sus schemas de respuesta. Se verificaron 11
+pruebas de sesión, ESLint, TypeScript y build. Los tipos de otros dominios siguen
+pendientes de sus schemas de respuesta. Para actualizar el contrato ejecutar
+`npm run openapi:export` en `ribani-server` y `npm run api:types` aquí.
 
 ---
 

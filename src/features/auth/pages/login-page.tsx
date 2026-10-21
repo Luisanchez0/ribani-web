@@ -1,5 +1,5 @@
 import { isAxiosError } from 'axios'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { EscudoRibani } from '@/components/ui/escudo'
 
@@ -9,11 +9,14 @@ import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 
 import { useLogin } from '../hooks/use-login'
+import { useLoginDosPasos } from '../hooks/use-login-dos-pasos'
 import { useRegistroFamiliar } from '../hooks/use-registro-familiar'
+import { useRecuperarPassword } from '../hooks/use-recuperar-password'
 import { PAISES_TELEFONO } from '../datos/paises-telefono'
 import { esDesafioDosPasos } from '../types'
 
-type Vista = 'login' | 'registro'
+type Vista = 'login' | 'registro' | 'recuperar'
+type PasoRecuperar = 'solicitar' | 'restablecer'
 
 /** Traduce errores HTTP del backend a mensajes comprensibles (ver AGENTS.md). */
 function mensajeDeError(error: unknown): string {
@@ -81,6 +84,8 @@ export function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const login = useLogin()
+  const loginDosPasos = useLoginDosPasos()
+  const [codigoDosPasos, setCodigoDosPasos] = useState('')
 
   // Registro de familiar encargado
   const [nombre, setNombre] = useState('')
@@ -91,13 +96,92 @@ export function LoginPage() {
   const [passwordRegistro, setPasswordRegistro] = useState('')
   const registro = useRegistroFamiliar()
 
-  const requiereDosPasos = login.data
-    ? esDesafioDosPasos(login.data)
-    : false
+  /**
+   * Desafío 2FA activo: /auth/login respondió twoFactorRequired y quedó
+   * pendiente la verifición del código (/auth/2fa/login) para emitir los
+   * tokens definitivos.
+   */
+  const desafioDosPasos =
+    login.data && esDesafioDosPasos(login.data) ? login.data : null
+
+  // Recuperación de contraseña (código por correo, dos pasos)
+  const { solicitar: solicitarReset, restablecer: restablecerPassword } =
+    useRecuperarPassword()
+  const [pasoRecuperar, setPasoRecuperar] = useState<PasoRecuperar>('solicitar')
+  const [emailRecuperar, setEmailRecuperar] = useState('')
+  const [codigoRecuperar, setCodigoRecuperar] = useState('')
+  const [passwordNueva, setPasswordNueva] = useState('')
+  const [passwordNuevaConfirm, setPasswordNuevaConfirm] = useState('')
+
+  /**
+   * Renovación silenciosa del desafío cada MINUTO: el challengeToken nace
+   * de POST /auth/login, así que se re-emite con las MISMAS credenciales
+   * (siguen en memoria) sin mostrar cuenta regresiva ni interrumpir al
+   * usuario. Si la renovación falla, se detiene el reintento y se avisa
+   * en pantalla (login.isError).
+   */
+  useEffect(() => {
+    if (
+      !desafioDosPasos ||
+      login.isPending ||
+      login.isError ||
+      loginDosPasos.isPending
+    ) {
+      return
+    }
+
+    const id = window.setInterval(() => {
+      login.mutate({ email, password })
+    }, 60_000)
+
+    return () => window.clearInterval(id)
+  }, [desafioDosPasos, login, loginDosPasos.isPending, email, password])
 
   function handleSubmitLogin(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault()
     login.mutate({ email, password })
+  }
+
+  function handleSubmitDosPasos(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault()
+
+    if (!desafioDosPasos) return
+
+    loginDosPasos.mutate({
+      challengeToken: desafioDosPasos.challengeToken,
+      code: codigoDosPasos.trim().replace(/\s/g, ''),
+    })
+  }
+
+  function handleSubmitSolicitarReset(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault()
+    solicitarReset.mutate(emailRecuperar, {
+      // Mueste el paso 2 aunque el correo no exista: la respuesta es
+      // genérica a propósito (no revela cuentas registradas).
+      onSuccess: () => setPasoRecuperar('restablecer'),
+    })
+  }
+
+  function handleSubmitRestablecer(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault()
+
+    if (passwordNueva !== passwordNuevaConfirm) return
+
+    restablecerPassword.mutate({
+      email: emailRecuperar.trim(),
+      codigo: codigoRecuperar.trim(),
+      password: passwordNueva,
+    })
+  }
+
+  function salirDeRecuperar() {
+    solicitarReset.reset()
+    restablecerPassword.reset()
+    setPasoRecuperar('solicitar')
+    setCodigoRecuperar('')
+    setPasswordNueva('')
+    setPasswordNuevaConfirm('')
+    setVista('login')
   }
 
   function handleSubmitRegistro(evento: FormEvent<HTMLFormElement>) {
@@ -157,7 +241,90 @@ export function LoginPage() {
             </button>
           </div>
 
-          {vista === 'login' ? (
+          {desafioDosPasos ? (
+            /* Verificación en dos pasos: segundo paso del login. */
+            <form
+              className="mt-8 space-y-5"
+              onSubmit={handleSubmitDosPasos}
+            >
+              <div>
+                <h1 className="font-display text-xl font-semibold text-pino-900">
+                  Verificación en dos pasos
+                </h1>
+                <p className="mt-1.5 text-sm/6 text-salvia-700">
+                  Tu cuenta tiene el 2FA activado. Escribe el código de 6
+                  dígitos de tu app authenticator para terminar de iniciar
+                  sesión.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="codigo-2fa"
+                  className="block text-sm font-medium text-pino-900"
+                >
+                  Código de la app authenticator
+                </label>
+                <Input
+                  id="codigo-2fa"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  placeholder="123456"
+                  maxLength={8}
+                  required
+                  className="text-center text-lg tracking-[0.4em]"
+                  value={codigoDosPasos}
+                  onChange={(evento) =>
+                    setCodigoDosPasos(evento.target.value.replace(/[^\d]/g, ''))
+                  }
+                />
+                <p className="text-xs text-salvia-600">
+                  El código es de 6 dígitos y cambia cada 30 segundos.
+                </p>
+
+              </div>
+
+              {loginDosPasos.isError && (
+                <Alert variant="error">
+                  {mensajeDeError(loginDosPasos.error)}
+                </Alert>
+              )}
+
+              {/* La renovación automática del desafío falló (p. ej. red). */}
+              {login.isError && (
+                <Alert variant="error">
+                  Tu verificación expiró y no se pudo renovar automáticamente.
+                  Usa «Volver a iniciar sesión» e intenta de nuevo.
+                </Alert>
+              )}
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loginDosPasos.isPending}
+              >
+                {loginDosPasos.isPending ? (
+                  <Spinner size="sm" label="Verificando…" />
+                ) : (
+                  'Verificar y entrar'
+                )}
+              </Button>
+
+              <button
+                type="button"
+                className="w-full text-center text-sm font-medium text-salvia-600 hover:text-pino-800"
+                onClick={() => {
+                  loginDosPasos.reset()
+                  setCodigoDosPasos('')
+                  // Vuelve al paso 1: la contraseña se pide de nuevo y el
+                  // backend emite un challengeToken fresco.
+                  login.reset()
+                }}
+              >
+                Volver a iniciar sesión
+              </button>
+            </form>
+          ) : vista === 'login' ? (
             <form className="mt-8 space-y-5" onSubmit={handleSubmitLogin}>
               <div className="space-y-1.5">
                 <label
@@ -200,13 +367,6 @@ export function LoginPage() {
                 <Alert variant="error">{mensajeDeError(login.error)}</Alert>
               )}
 
-              {requiereDosPasos && (
-                <Alert variant="info">
-                  Esta cuenta requiere verificación en dos pasos. Ese flujo se
-                  implementará próximamente.
-                </Alert>
-              )}
-
               <Button
                 type="submit"
                 className="w-full"
@@ -218,7 +378,208 @@ export function LoginPage() {
                   'Iniciar sesión'
                 )}
               </Button>
+
+              <button
+                type="button"
+                className="w-full text-center text-sm font-medium text-salvia-600 hover:text-pino-800"
+                onClick={() => {
+                  setEmailRecuperar(email)
+                  solicitarReset.reset()
+                  restablecerPassword.reset()
+                  setPasoRecuperar('solicitar')
+                  setVista('recuperar')
+                }}
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
             </form>
+          ) : vista === 'recuperar' ? (
+            pasoRecuperar === 'solicitar' ? (
+              <form
+                className="mt-8 space-y-5"
+                onSubmit={handleSubmitSolicitarReset}
+              >
+                <div>
+                  <h1 className="font-display text-xl font-semibold text-pino-900">
+                    Recuperar contraseña
+                  </h1>
+                  <p className="mt-1.5 text-sm/6 text-salvia-700">
+                    Escribe el correo de tu cuenta. Te enviaremos un código
+                    de 6 dígitos válido por 10 minutos.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="recuperar-email"
+                    className="block text-sm font-medium text-pino-900"
+                  >
+                    Correo electrónico
+                  </label>
+                  <Input
+                    id="recuperar-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={emailRecuperar}
+                    onChange={(evento) =>
+                      setEmailRecuperar(evento.target.value)
+                    }
+                  />
+                </div>
+
+                {solicitarReset.isError && (
+                  <Alert variant="error">
+                    {mensajeDeError(solicitarReset.error)}
+                  </Alert>
+                )}
+
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={solicitarReset.isPending}
+                >
+                  {solicitarReset.isPending ? (
+                    <Spinner size="sm" label="Enviando código…" />
+                  ) : (
+                    'Enviar código'
+                  )}
+                </Button>
+
+                <button
+                  type="button"
+                  className="w-full text-center text-sm font-medium text-salvia-600 hover:text-pino-800"
+                  onClick={salirDeRecuperar}
+                >
+                  Volver a iniciar sesión
+                </button>
+              </form>
+            ) : (
+            <form className="mt-8 space-y-5" onSubmit={handleSubmitRestablecer}>
+                <div>
+                  <h1 className="font-display text-xl font-semibold text-pino-900">
+                    Restablecer contraseña
+                  </h1>
+                  <p className="mt-1.5 text-sm/6 text-salvia-700">
+                    Escribe el código enviado a{' '}
+                    <strong>{emailRecuperar.trim()}</strong> y tu contraseña
+                    nueva.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="recuperar-codigo"
+                    className="block text-sm font-medium text-pino-900"
+                  >
+                    Código del correo
+                  </label>
+                  <Input
+                    id="recuperar-codigo"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder="123456"
+                    maxLength={6}
+                    required
+                    className="text-center text-lg tracking-[0.4em]"
+                    value={codigoRecuperar}
+                    onChange={(evento) =>
+                      setCodigoRecuperar(
+                        evento.target.value.replace(/[^\d]/g, ''),
+                      )
+                    }
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="recuperar-password"
+                    className="block text-sm font-medium text-pino-900"
+                  >
+                    Contraseña nueva
+                  </label>
+                  <Input
+                    id="recuperar-password"
+                    name="password"
+                    type="password"
+                    autoComplete="new-password"
+                    required
+                    minLength={8}
+                    value={passwordNueva}
+                    onChange={(evento) => setPasswordNueva(evento.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="recuperar-password-confirm"
+                    className="block text-sm font-medium text-pino-900"
+                  >
+                    Confirmar contraseña
+                  </label>
+                  <Input
+                    id="recuperar-password-confirm"
+                    name="password-confirm"
+                    type="password"
+                    autoComplete="new-password"
+                    required
+                    minLength={8}
+                    value={passwordNuevaConfirm}
+                    onChange={(evento) =>
+                      setPasswordNuevaConfirm(evento.target.value)
+                    }
+                  />
+                  {passwordNuevaConfirm.length > 0 &&
+                    passwordNueva !== passwordNuevaConfirm && (
+                      <p className="text-xs text-red-700">
+                        Las contraseñas no coinciden.
+                      </p>
+                    )}
+                </div>
+
+                {restablecerPassword.isError && (
+                  <Alert variant="error">
+                    {mensajeDeError(restablecerPassword.error)}
+                  </Alert>
+                )}
+
+                {restablecerPassword.isSuccess && (
+                  <Alert variant="success">
+                    Contraseña actualizada. Ya puedes iniciar sesión con la
+                    nueva ({restablecerPassword.data?.mensaje}).
+                  </Alert>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    className="flex-1 text-center text-sm font-medium text-salvia-600 hover:text-pino-800"
+                    onClick={() => {
+                      restablecerPassword.reset()
+                      setPasoRecuperar('solicitar')
+                    }}
+                  >
+                    Reenviar código
+                  </button>
+                  <Button
+                    type="submit"
+                    className="flex-[2]"
+                    disabled={
+                      restablecerPassword.isPending ||
+                      (passwordNuevaConfirm.length > 0 &&
+                        passwordNueva !== passwordNuevaConfirm)
+                    }
+                  >
+                    {restablecerPassword.isPending ? (
+                      <Spinner size="sm" label="Restableciendo…" />
+                    ) : (
+                      'Restablecer'
+                    )}
+                  </Button>
+                </div>
+              </form>
+            )
           ) : (
             <div className="mt-8">
               <h1 className="font-display text-xl font-semibold text-pino-900">

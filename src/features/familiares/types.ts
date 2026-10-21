@@ -137,6 +137,26 @@ export type FamiliarVinculado = {
 }
 
 /**
+ * Convierte un vínculo en formato admin (GET /familiares, vista
+ * ADMINISTRADOR) a la forma plana que consume el modal de 2FA asistido,
+ * usando al adulto mayor de la relación como objetivo.
+ */
+export function adultoDesdeVinculoAdmin(vinculo: VinculoAdmin): AdultoVinculado {
+  return {
+    id: vinculo.adulto.id,
+    vinculo_id: vinculo.id,
+    nombre: vinculo.adulto.nombre,
+    apellido: vinculo.adulto.apellido,
+    email: vinculo.adulto.email,
+    parentesco: vinculo.parentesco,
+    es_contacto_principal: vinculo.es_contacto_principal,
+    puede_ver_ubicacion: vinculo.puede_ver_ubicacion,
+    puede_gestionar_medicamentos: vinculo.puede_gestionar_medicamentos,
+    estado: vinculo.estado,
+  }
+}
+
+/**
  * POST /familiares/invitaciones y /completar — bodies de las mutaciones
  * de invitación, según los DTOs del backend.
  */

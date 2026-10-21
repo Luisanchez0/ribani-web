@@ -4,7 +4,8 @@ import axios, {
 } from 'axios'
 
 import { env } from '@/config/env'
-import { useAuthStore, type UsuarioSesion } from '@/stores/auth-store'
+import { useAuthStore } from '@/stores/auth-store'
+import type { components } from '@/types/api'
 
 /**
  * Único cliente HTTP de la aplicación (ver AGENTS.md).
@@ -19,32 +20,33 @@ import { useAuthStore, type UsuarioSesion } from '@/stores/auth-store'
  */
 
 /** Forma de la respuesta del backend al emitir tokens (auth.service.ts). */
-type TokensEmitidos = {
-  accessToken: string
-  refreshToken: string
-  tokenType: string
-  expiresIn: number
-  user: UsuarioSesion
-}
+type TokensEmitidos = components['schemas']['TokensRespuestaDto']
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: env.apiUrl,
 })
 
 apiClient.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().token
+  const { token, sessionRevision } = useAuthStore.getState()
+  const request = config as RequestSesion
+  request.ribaniRevision ??= sessionRevision
+  if (request.ribaniRevision !== sessionRevision) {
+    throw new axios.CanceledError('La sesión cambió antes de enviar la petición.')
+  }
 
   if (token) {
     config.headers.set('Authorization', `Bearer ${token}`)
   }
 
   return config
-})
+}, (error: unknown) => { throw error }, { synchronous: true })
 
-/** Requests que ya se reintentaron tras un refresh (evitar bucles). */
-const reintentadas = new WeakSet<InternalAxiosRequestConfig>()
+type RequestSesion = InternalAxiosRequestConfig & {
+  ribaniRevision?: number
+  ribaniReintentada?: boolean
+}
 
-let refreshEnCurso: Promise<TokensEmitidos> | null = null
+let refreshEnCurso: { revision: number; promise: Promise<TokensEmitidos> } | null = null
 
 async function refrescarTokens(refreshToken: string): Promise<TokensEmitidos> {
   // Axios puro (sin interceptores) para no recursar sobre el propio refresh.
@@ -57,27 +59,36 @@ async function refrescarTokens(refreshToken: string): Promise<TokensEmitidos> {
 }
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const config = response.config as RequestSesion
+    if (config.ribaniRevision !== useAuthStore.getState().sessionRevision) {
+      throw new axios.CanceledError('La sesión cambió durante la petición.')
+    }
+    return response
+  },
   async (error: unknown) => {
     if (!axios.isAxiosError(error)) {
       throw error
     }
 
-    const config = error.config
+    const config = error.config as RequestSesion | undefined
     const status = error.response?.status
 
     // Solo reintentar 401 de peticiones autenticadas, y una sola vez.
     if (
       status !== 401 ||
       !config ||
-      reintentadas.has(config) ||
+      config.ribaniReintentada ||
       config.url?.includes('/auth/')
     ) {
       throw error
     }
 
-    const { refreshToken, setSesion, clearSesion } =
+    const { refreshToken, setSesion, clearSesion, sessionRevision } =
       useAuthStore.getState()
+
+    // Una petición de la sesión anterior no puede renovar ni cerrar la actual.
+    if (config.ribaniRevision !== sessionRevision) throw error
 
     if (!refreshToken) {
       clearSesion()
@@ -86,11 +97,18 @@ apiClient.interceptors.response.use(
 
     try {
       // Single-flight: ante varios 401 concurrentes, se refresca una sola vez.
-      refreshEnCurso ??= refrescarTokens(refreshToken).finally(() => {
-        refreshEnCurso = null
-      })
+      if (!refreshEnCurso || refreshEnCurso.revision !== sessionRevision) {
+        const promise = refrescarTokens(refreshToken)
+        const actual = { revision: sessionRevision, promise }
+        refreshEnCurso = actual
+        const liberar = () => {
+          if (refreshEnCurso === actual) refreshEnCurso = null
+        }
+        void promise.then(liberar, liberar)
+      }
 
-      const tokens = await refreshEnCurso
+      const tokens = await refreshEnCurso.promise
+      if (useAuthStore.getState().sessionRevision !== sessionRevision) throw error
 
       setSesion({
         accessToken: tokens.accessToken,
@@ -98,12 +116,12 @@ apiClient.interceptors.response.use(
         usuario: tokens.user,
       })
 
-      reintentadas.add(config)
+      config.ribaniReintentada = true
       config.headers.set('Authorization', `Bearer ${tokens.accessToken}`)
 
       return await apiClient(config)
     } catch {
-      clearSesion()
+      if (useAuthStore.getState().sessionRevision === sessionRevision) clearSesion()
       throw error
     }
   },

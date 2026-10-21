@@ -32,10 +32,11 @@ export function useVinculos() {
 }
 
 /** GET /familiares/mis-adultos — adultos a cargo del usuario con sesión. */
-export function useMisAdultos() {
+export function useMisAdultos(enabled = true) {
   return useQuery({
     queryKey: clavesFamiliares.misAdultos,
     queryFn: () => familiaresApi.misAdultos(),
+    enabled,
   })
 }
 

@@ -7,7 +7,12 @@ import { authApi } from '../api/auth.api'
 import { esDesafioDosPasos } from '../types'
 import type { CredencialesLogin } from '../types'
 
-function destinoDesdeEstado(estado: unknown): string {
+/**
+ * Destino tras el login: la ruta "from" del estado de navegación
+ * (puesta por RequireAuth) o el panel. Compartido con el paso 2FA
+ * (use-login-dos-pasos), que termina el mismo circuito.
+ */
+export function destinoDesdeEstado(estado: unknown): string {
   if (
     typeof estado === 'object' &&
     estado !== null &&

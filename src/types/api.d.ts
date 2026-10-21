@@ -20,6 +20,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/usuarios/perfil": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UsuariosController_miPerfil"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["UsuariosController_editarMiPerfil"];
+        trace?: never;
+    };
+    "/usuarios/perfil/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["UsuariosController_cambiarMiPassword"];
+        trace?: never;
+    };
     "/usuarios": {
         parameters: {
             query?: never;
@@ -260,6 +292,134 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/whatsapp/integracion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WhatsappController_integracion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/whatsapp/destinatarios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WhatsappController_listar"];
+        put?: never;
+        post: operations["WhatsappController_registrar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/whatsapp/destinatarios/{id}/consentimiento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["WhatsappController_consentimiento"];
+        trace?: never;
+    };
+    "/whatsapp/destinatarios/{id}/prueba": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["WhatsappController_prueba"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/whatsapp/historial": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WhatsappController_historial"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/whatsapp/alertas/resumen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WhatsappController_resumenAlertas"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/whatsapp/adultos/{adultoId}/preferencias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WhatsappController_preferencias"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["WhatsappController_guardarPreferencias"];
+        trace?: never;
+    };
+    "/configuracion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConfiguracionController_obtener"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["ConfiguracionController_actualizar"];
+        trace?: never;
+    };
     "/contactos": {
         parameters: {
             query?: never;
@@ -386,6 +546,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["TomasController_update"];
+        trace?: never;
+    };
+    "/tomas/{id}/posponer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TomasController_posponer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/familiares": {
@@ -580,6 +756,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ubicaciones/lote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["UbicacionesController_reportarLote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ubicaciones/actual": {
         parameters: {
             query?: never;
@@ -638,6 +830,22 @@ export interface paths {
         get: operations["AlertasController_listar"];
         put?: never;
         post: operations["AlertasController_crear"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/alertas/intervalo-ubicacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AlertasController_intervaloUbicacion"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -808,6 +1016,40 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        UsuarioRespuestaDto: {
+            /** Format: uuid */
+            id: string;
+            rol_id: number;
+            nombre: string;
+            apellido: string;
+            /** Format: email */
+            email: string;
+            telefono: string | null;
+            /** Format: date-time */
+            email_verificado_en: string | null;
+            activo: boolean;
+            /** Format: date-time */
+            ultimo_acceso_en: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        UpdatePerfilDto: {
+            nombre?: string;
+            apellido?: string;
+            telefono?: string;
+        };
+        CambiarPasswordDto: {
+            password_actual: string;
+            password: string;
+        };
+        PasswordActualizadaDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {boolean} */
+            password_actualizada: true;
+        };
         CreateUsuarioDto: {
             rol_codigo: string;
             nombre: string;
@@ -828,8 +1070,49 @@ export interface components {
             password?: string;
             activo?: boolean;
         };
+        ConfigDosPasosDto: {
+            secret: string;
+            otpauthUrl: string;
+            mensaje: string;
+        };
         VerifyTwoFactorDto: {
             code: string;
+        };
+        EstadoDosPasosDto: {
+            twoFactorEnabled: boolean;
+            mensaje: string;
+        };
+        RolSesionDto: {
+            id: number;
+            codigo: string;
+            nombre: string;
+        };
+        UsuarioSesionDto: {
+            /** Format: uuid */
+            id: string;
+            nombre: string;
+            apellido: string;
+            /** Format: email */
+            email: string;
+            telefono: string | null;
+            emailVerificado: boolean;
+            twoFactorEnabled: boolean;
+            rol: components["schemas"]["RolSesionDto"];
+            permisos: string[];
+        };
+        TokensRespuestaDto: {
+            accessToken: string;
+            refreshToken: string;
+            /** @enum {string} */
+            tokenType: "Bearer";
+            expiresIn: number;
+            user: components["schemas"]["UsuarioSesionDto"];
+        };
+        DesafioDosPasosDto: {
+            /** @enum {boolean} */
+            twoFactorRequired: true;
+            challengeToken: string;
+            expiresIn: number;
         };
         RegisterDto: {
             nombre: string;
@@ -841,6 +1124,20 @@ export interface components {
             /** @enum {string} */
             rolCodigo?: "ADULTO_MAYOR" | "FAMILIAR_ENCARGADO";
         };
+        RegistroRespuestaDto: {
+            /** Format: uuid */
+            id: string;
+            nombre: string;
+            apellido: string;
+            /** Format: email */
+            email: string;
+            telefono: string | null;
+            activo: boolean;
+            rol: components["schemas"]["RolSesionDto"];
+            emailVerificado: boolean;
+            /** Format: date-time */
+            createdAt: string;
+        };
         LoginDto: {
             /** Format: email */
             email: string;
@@ -849,12 +1146,127 @@ export interface components {
         RefreshTokenDto: {
             refreshToken: string;
         };
+        MensajeRespuestaDto: {
+            message: string;
+        };
         TwoFactorLoginDto: {
             challengeToken: string;
             code: string;
         };
         DisableTwoFactorDto: {
             password: string;
+        };
+        UsuarioActualDto: {
+            /** Format: uuid */
+            id: string;
+            nombre: string;
+            apellido: string;
+            /** Format: email */
+            email: string;
+            telefono: string | null;
+            emailVerificado: boolean;
+            twoFactorEnabled: boolean;
+            rol: components["schemas"]["RolSesionDto"];
+            permisos: string[];
+            /** Format: date-time */
+            ultimoAcceso: string | null;
+        };
+        IntegracionWhatsappDto: {
+            habilitada: boolean;
+            procesador_habilitado: boolean;
+            recordatorios_habilitados: boolean;
+            prueba_configurada: boolean;
+        };
+        DestinatarioWhatsappDto: {
+            id: string;
+            usuario_id: string | null;
+            contacto_emergencia_id: string | null;
+            telefono_e164: string;
+            nombre: string | null;
+            /** @enum {string} */
+            consentimiento: "PENDIENTE" | "ACEPTADO" | "REVOCADO";
+            consentimiento_origen: string | null;
+            /** Format: date-time */
+            consentimiento_en: string | null;
+            /** Format: date-time */
+            revocado_en: string | null;
+            activo: boolean;
+        };
+        RegistrarDestinatarioDto: {
+            /** @example +525512345678 */
+            telefono_e164: string;
+            /**
+             * Format: uuid
+             * @description Solo administrador; teléfono del contacto, consentimiento inicialmente pendiente.
+             */
+            contacto_emergencia_id?: string;
+        };
+        ConsentimientoWhatsappDto: {
+            /** @description Declaración expresa del titular. false revoca y cancela pendientes. */
+            aceptado: boolean;
+            /**
+             * @description Para contactos sin cuenta, el administrador debe conservar evidencia externa del consentimiento.
+             * @enum {string}
+             */
+            origen?: "FORMULARIO" | "OTRO";
+        };
+        EstadoWhatsappDto: {
+            id: string;
+            estado: string;
+            /** Format: date-time */
+            ocurrido_en: string;
+            codigo_error: string | null;
+        };
+        NotificacionWhatsappDto: {
+            id: string;
+            destinatario_id: string;
+            alerta_id: string | null;
+            toma_id: string | null;
+            tipo: string;
+            estado: string;
+            intentos: number;
+            /** Format: date-time */
+            created_at: string;
+            codigo_error: string | null;
+            /** Format: date-time */
+            siguiente_intento_en: string | null;
+            eventos: components["schemas"]["EstadoWhatsappDto"][];
+        };
+        ResumenAlertaWhatsappDto: {
+            alerta_id: string;
+            estado: string;
+            cantidad: number;
+        };
+        ConfiguracionWhatsappDto: {
+            notificaciones_habilitadas?: boolean;
+            recordatorio_medicamentos?: boolean;
+            minutos_repeticion?: number;
+            max_repeticiones?: number;
+            adulto_id: string;
+        };
+        PreferenciasWhatsappDto: {
+            notificaciones_habilitadas?: boolean;
+            recordatorio_medicamentos?: boolean;
+            minutos_repeticion?: number;
+            max_repeticiones?: number;
+        };
+        ConfiguracionRespuestaDto: {
+            adulto_id: string;
+            zona_horaria: string;
+            notificaciones_habilitadas: boolean;
+            recordatorio_medicamentos: boolean;
+            minutos_repeticion: number;
+            max_repeticiones: number;
+            ubicacion_compartida: boolean;
+            /** @description Familiares con cuenta activa y vínculo ACTIVA; no indica disponibilidad de sensores. */
+            familiares_activos: number;
+        };
+        ActualizarConfiguracionDto: {
+            notificaciones_habilitadas?: boolean;
+            recordatorio_medicamentos?: boolean;
+            minutos_repeticion?: number;
+            max_repeticiones?: number;
+            zona_horaria?: string;
         };
         CreateContactoDto: {
             /** Format: uuid */
@@ -918,6 +1330,31 @@ export interface components {
             horario_id?: string;
             programada_para: string;
             nota?: string;
+        };
+        TomaRespuestaDto: {
+            id: string;
+            medicamento_id: string;
+            horario_id: string | null;
+            adulto_id: string;
+            /** Format: date-time */
+            programada_para: string;
+            /**
+             * Format: date-time
+             * @description Hora del recordatorio; no cambia la ventana original de la toma.
+             */
+            recordar_en: string;
+            /** @enum {string} */
+            estado: "PENDIENTE" | "POSPUESTA" | "TOMADA" | "OMITIDA" | "CANCELADA";
+            /** Format: date-time */
+            tomada_en: string | null;
+            /** @description Decimal serializado por Prisma. */
+            dosis_tomada: string | null;
+            registrada_por: string | null;
+            nota: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
         };
         UpdateTomaDto: {
             /** @enum {string} */
@@ -995,13 +1432,16 @@ export interface components {
             fuente?: "GPS" | "RED" | "MANUAL";
             registrada_en?: string;
         };
+        CrearLoteUbicacionesDto: {
+            reportes: components["schemas"]["CreateUbicacionDto"][];
+        };
         CreateAlertaDto: {
             /** Format: uuid */
             adulto_id?: string;
             /** Format: uuid */
             dispositivo_id?: string;
             /** @enum {string} */
-            tipo: "SOS" | "CAIDA" | "ZONA_SEGURA" | "MEDICAMENTO" | "INACTIVIDAD" | "SISTEMA" | "OTRA";
+            tipo: "SOS" | "OTRA" | "MEDICAMENTO" | "CAIDA" | "ZONA_SEGURA" | "INACTIVIDAD" | "SISTEMA";
             /** @enum {string} */
             severidad?: "BAJA" | "MEDIA" | "ALTA" | "CRITICA";
             titulo: string;
@@ -1011,13 +1451,13 @@ export interface components {
         };
         ResolverAlertaDto: {
             /** @enum {string} */
-            estado: "EN_ATENCION" | "RESUELTA" | "CANCELADA";
+            estado: "CANCELADA" | "EN_ATENCION" | "RESUELTA";
             detalle?: string;
         };
         CreateDispositivoDto: {
             nombre: string;
             /** @enum {string} */
-            plataforma: "ANDROID" | "IOS" | "WEB";
+            plataforma: "WEB" | "ANDROID" | "IOS";
             identificador?: string;
             push_token?: string;
             version_app?: string;
@@ -1065,6 +1505,72 @@ export interface operations {
             };
         };
     };
+    UsuariosController_miPerfil: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsuarioRespuestaDto"];
+                };
+            };
+        };
+    };
+    UsuariosController_editarMiPerfil: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePerfilDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsuarioRespuestaDto"];
+                };
+            };
+        };
+    };
+    UsuariosController_cambiarMiPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CambiarPasswordDto"];
+            };
+        };
+        responses: {
+            /** @description Contraseña propia actualizada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordActualizadaDto"];
+                };
+            };
+        };
+    };
     UsuariosController_findAll: {
         parameters: {
             query?: {
@@ -1081,7 +1587,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["UsuarioRespuestaDto"][];
+                };
             };
         };
     };
@@ -1102,7 +1610,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["UsuarioRespuestaDto"];
+                };
             };
         };
     };
@@ -1121,7 +1631,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["UsuarioRespuestaDto"];
+                };
             };
         };
     };
@@ -1141,7 +1653,12 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                    };
+                };
             };
         };
     };
@@ -1164,7 +1681,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["UsuarioRespuestaDto"];
+                };
             };
         };
     };
@@ -1183,7 +1702,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["UsuarioRespuestaDto"];
+                };
             };
         };
     };
@@ -1203,7 +1724,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["UsuarioRespuestaDto"];
+                };
             };
         };
     };
@@ -1222,7 +1745,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ConfigDosPasosDto"];
+                };
             };
         };
     };
@@ -1245,7 +1770,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["EstadoDosPasosDto"];
+                };
             };
         };
     };
@@ -1266,7 +1793,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RegistroRespuestaDto"];
+                };
             };
         };
     };
@@ -1288,7 +1817,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, never>;
+                    "application/json": components["schemas"]["TokensRespuestaDto"] | components["schemas"]["DesafioDosPasosDto"];
                 };
             };
         };
@@ -1310,7 +1839,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TokensRespuestaDto"];
+                };
             };
         };
     };
@@ -1331,7 +1862,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MensajeRespuestaDto"];
+                };
             };
         };
     };
@@ -1348,7 +1881,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ConfigDosPasosDto"];
+                };
             };
         };
     };
@@ -1369,7 +1904,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["EstadoDosPasosDto"];
+                };
             };
         };
     };
@@ -1390,7 +1927,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TokensRespuestaDto"];
+                };
             };
         };
     };
@@ -1411,7 +1950,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["EstadoDosPasosDto"];
+                };
             };
         };
     };
@@ -1428,7 +1969,242 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["UsuarioActualDto"];
+                };
+            };
+        };
+    };
+    WhatsappController_integracion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegracionWhatsappDto"];
+                };
+            };
+        };
+    };
+    WhatsappController_listar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DestinatarioWhatsappDto"][];
+                };
+            };
+        };
+    };
+    WhatsappController_registrar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegistrarDestinatarioDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DestinatarioWhatsappDto"];
+                };
+            };
+        };
+    };
+    WhatsappController_consentimiento: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsentimientoWhatsappDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DestinatarioWhatsappDto"];
+                };
+            };
+        };
+    };
+    WhatsappController_prueba: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificacionWhatsappDto"];
+                };
+            };
+        };
+    };
+    WhatsappController_historial: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificacionWhatsappDto"][];
+                };
+            };
+        };
+    };
+    WhatsappController_resumenAlertas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResumenAlertaWhatsappDto"][];
+                };
+            };
+        };
+    };
+    WhatsappController_preferencias: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                adultoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfiguracionWhatsappDto"];
+                };
+            };
+        };
+    };
+    WhatsappController_guardarPreferencias: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                adultoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreferenciasWhatsappDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfiguracionWhatsappDto"];
+                };
+            };
+        };
+    };
+    ConfiguracionController_obtener: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfiguracionRespuestaDto"];
+                };
+            };
+        };
+    };
+    ConfiguracionController_actualizar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActualizarConfiguracionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfiguracionRespuestaDto"];
+                };
             };
         };
     };
@@ -1762,7 +2538,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TomaRespuestaDto"][];
+                };
             };
         };
     };
@@ -1783,7 +2561,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TomaRespuestaDto"];
+                };
             };
         };
     };
@@ -1802,7 +2582,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TomaRespuestaDto"];
+                };
             };
         };
     };
@@ -1844,7 +2626,31 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TomaRespuestaDto"];
+                };
+            };
+        };
+    };
+    TomasController_posponer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Una vez, diez minutos, dentro de la ventana original. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TomaRespuestaDto"];
+                };
             };
         };
     };
@@ -1899,7 +2705,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": Record<string, never>;
+                };
             };
         };
     };
@@ -2203,6 +3011,27 @@ export interface operations {
             };
         };
     };
+    UbicacionesController_reportarLote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrearLoteUbicacionesDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     UbicacionesController_actual: {
         parameters: {
             query: {
@@ -2304,6 +3133,23 @@ export interface operations {
         };
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AlertasController_intervaloUbicacion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

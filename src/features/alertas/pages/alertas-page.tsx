@@ -6,6 +6,12 @@ import { Td, Table, Th } from '@/components/ui/table'
 import { IconoAlertas } from '@/lib/iconos'
 import { formatFechaHora } from '@/lib/format'
 import { useAdultos } from '@/features/usuarios'
+import { useMisAdultos } from '@/features/familiares'
+import {
+  useResumenWhatsapp,
+  resumirWhatsapp,
+  type ResumenWhatsapp,
+} from '@/features/whatsapp'
 
 import {
   useActualizarAlerta,
@@ -13,10 +19,12 @@ import {
   type Alerta,
   type TransicionAlerta,
 } from '../api/alertas.api'
-
+import { useAlertasStream } from '../hooks/use-alertas-stream'
 
 export function AlertasPage() {
   const adultos = useAdultos()
+  const misAdultos = useMisAdultos()
+  const whatsapp = useResumenWhatsapp()
   const actualizar = useActualizarAlerta()
 
   const [estadoFiltro, setEstadoFiltro] = useState('')
@@ -31,6 +39,19 @@ export function AlertasPage() {
   )
 
   const alertas = useAlertas(params)
+
+  // Tiempo real del panel: un stream SSE por adulto vinculado ACTIVA.
+  // Cada creación o cambio de estado (caída/SOS desde la app, cierre
+  // automático de zona segura, etc.) invalida ['alertas'] y la tabla
+  // relea GET /alertas sin recargar la página.
+  const idsAdultos = useMemo(
+    () =>
+      (misAdultos.data ?? [])
+        .filter((adulto) => adulto.estado === 'ACTIVA')
+        .map((adulto) => adulto.id),
+    [misAdultos.data],
+  )
+  const stream = useAlertasStream(idsAdultos)
 
   const nombreAdulto = useMemo(() => {
     const mapa = new Map<string, string>()
@@ -60,6 +81,25 @@ export function AlertasPage() {
           Alertas
         </h1>
 
+        {stream.estado === 'conectado' && (
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full bg-pino-100 px-2.5 py-1 text-xs font-medium text-pino-800"
+            title="Recibe en vivo nuevas alertas y cambios de estado"
+          >
+            <span className="size-2 rounded-full bg-pino-600" />
+            En vivo
+          </span>
+        )}
+        {stream.estado === 'error' && (
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800"
+            title="Hubo un fallo de conexión; reintentando automáticamente"
+          >
+            <span className="size-2 rounded-full bg-amber-500" />
+            Reconectando…
+          </span>
+        )}
+
         <label className="flex items-center gap-2 text-sm text-salvia-700">
           <input
             type="checkbox"
@@ -72,10 +112,9 @@ export function AlertasPage() {
       </div>
 
       <p className="max-w-2xl text-sm/6 text-salvia-700">
-        Las alertas críticas (caídas, SOS) se notifican por WhatsApp a los
-        contactos de emergencia y familiares cuando el adulto mayor{' '}
-        <strong>no confirma que está bien</strong> dentro del tiempo límite
-        de la app. Aquí puedes atenderlas o darles seguimiento.
+        Las alertas críticas se agregan a la cola de WhatsApp para contactos y
+        familiares con consentimiento, cuando la integración está configurada.
+        La columna WhatsApp muestra los estados registrados del proveedor.
       </p>
 
       {/* Filtro por estado */}
@@ -114,8 +153,8 @@ export function AlertasPage() {
               role="alert"
               className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900"
             >
-              No se pudieron cargar las alertas. Verifica tu conexión e
-              intenta de nuevo.
+              No se pudieron cargar las alertas. Verifica tu conexión e intenta
+              de nuevo.
             </div>
             <Button
               variant="secondary"
@@ -139,9 +178,12 @@ export function AlertasPage() {
         ) : (
           <TablaAlertas
             alertas={visibles}
+            resumenWhatsapp={whatsapp.isError ? undefined : whatsapp.data}
             nombreAdulto={nombreAdulto}
             onTransicionar={transicionar}
-            ocupados={actualizar.isPending ? [actualizar.variables?.id ?? ''] : []}
+            ocupados={
+              actualizar.isPending ? [actualizar.variables?.id ?? ''] : []
+            }
           />
         )}
       </div>
@@ -179,6 +221,7 @@ const etiquetaTipo: Record<Alerta['tipo'], string> = {
 
 type TablaAlertasProps = {
   alertas: Alerta[]
+  resumenWhatsapp: ResumenWhatsapp[] | undefined
   nombreAdulto: Map<string, string>
   onTransicionar: (alerta: Alerta, cuerpo: TransicionAlerta) => void
   ocupados: string[]
@@ -186,6 +229,7 @@ type TablaAlertasProps = {
 
 function TablaAlertas({
   alertas,
+  resumenWhatsapp,
   nombreAdulto,
   onTransicionar,
   ocupados,
@@ -240,15 +284,9 @@ function TablaAlertas({
               </Td>
               <Td>
                 <span
-                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                    notificacionWhatsApp(alerta) === 'Confirmada'
-                      ? 'bg-pino-100 text-pino-800'
-                      : notificacionWhatsApp(alerta) === '—'
-                        ? 'bg-salvia-50 text-salvia-500'
-                        : 'bg-amber-100 text-amber-800'
-                  }`}
+                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${'bg-salvia-100 text-salvia-700'}`}
                 >
-                  {notificacionWhatsApp(alerta)}
+                  {resumirWhatsapp(resumenWhatsapp, alerta.id)}
                 </span>
               </Td>
               <Td>
@@ -319,15 +357,4 @@ function etiquetaEstado(estado: Alerta['estado']): string {
     case 'CANCELADA':
       return 'Cancelada'
   }
-}
-
-/**
- * Estado de la notificación WhatsApp asociada a la alerta.
- * La cola vive en notificaciones_whatsapp (un.EN_COLA/FALLIDA/ENVIADA);
- * mientras no exista worker, se muestra el estado de la cola.
- */
-function notificacionWhatsApp(alerta: Alerta): string {
-  if (alerta.severidad !== 'CRITICA') return '—'
-  if (alerta.estado === 'RESUELTA') return 'Confirmada'
-  return 'En cola'
 }

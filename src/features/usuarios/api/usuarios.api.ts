@@ -1,7 +1,10 @@
 import { apiClient } from '@/lib/api-client'
+import type { components } from '@/types/api'
 
 import type {
+  ActualizarPerfil,
   ActualizarUsuario,
+  CambiarPassword,
   CrearUsuario,
   FiltrosUsuarios,
   RolLista,
@@ -10,6 +13,29 @@ import type {
 
 
 export const usuariosApi = {
+  obtenerMiPerfil(): Promise<UsuarioLista> {
+    return apiClient
+      .get<UsuarioLista>('/usuarios/perfil')
+      .then((response) => response.data)
+  },
+
+  actualizarMiPerfil(datos: ActualizarPerfil): Promise<UsuarioLista> {
+    return apiClient
+      .patch<UsuarioLista>('/usuarios/perfil', datos)
+      .then((response) => response.data)
+  },
+
+  cambiarMiPassword(
+    datos: CambiarPassword,
+  ): Promise<components['schemas']['PasswordActualizadaDto']> {
+    return apiClient
+      .patch<components['schemas']['PasswordActualizadaDto']>(
+        '/usuarios/perfil/password',
+        datos,
+      )
+      .then((response) => response.data)
+  },
+
   listar(filtros?: FiltrosUsuarios): Promise<UsuarioLista[]> {
     return apiClient
       .get<UsuarioLista[]>('/usuarios', { params: filtros })

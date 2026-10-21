@@ -34,7 +34,15 @@ export function abrirStreamSse(
   opciones: OpcionesSse = {},
 ): () => void {
   const controller = new AbortController()
-  const token = useAuthStore.getState().token
+  const { token, sessionRevision } = useAuthStore.getState()
+  if (!token) return () => undefined
+  const unsubscribe = useAuthStore.subscribe((state) => {
+    if (state.sessionRevision !== sessionRevision) controller.abort()
+  })
+  const cerrar = () => {
+    controller.abort()
+    unsubscribe()
+  }
 
   // Diferencia con axios (api-client normaliza la unión baseURL+url): con
   // fetch nativo, apiUrl='http://host:3000/' + path='/x' produce dobles
@@ -52,6 +60,7 @@ export function abrirStreamSse(
     // aunque la pestaña quede en segundo plano.
     openWhenHidden: true,
     onopen: async (response) => {
+      if (controller.signal.aborted) return
       const autorizado =
         response.ok &&
         response.headers.get('content-type')?.includes(EventStreamContentType)
@@ -65,12 +74,13 @@ export function abrirStreamSse(
       throw new Error(`SSE respondió ${response.status}`)
     },
     onmessage: (evento) => {
-      opciones.onMessage?.(evento)
+      if (!controller.signal.aborted) opciones.onMessage?.(evento)
     },
     onclose: () => {
-      opciones.onClose?.()
+      if (!controller.signal.aborted) opciones.onClose?.()
     },
     onerror: (error) => {
+      if (controller.signal.aborted) throw error
       opciones.onError?.(error)
       // Al relanzar el error se detiene el reintento automático de
       // fetch-event-source; la reconexión queda a cargo del hook de la
@@ -78,6 +88,9 @@ export function abrirStreamSse(
       throw error
     },
   })
+    // onerror ya entrega el fallo al hook; consumir el rechazo evita uno global.
+    .catch(() => undefined)
+    .finally(unsubscribe)
 
-  return () => controller.abort()
+  return cerrar
 }

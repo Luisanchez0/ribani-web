@@ -17,9 +17,10 @@ export const clavesUbicaciones = {
 }
 
 
-export function useUbicacionActual(adultoId: string) {
+export function useUbicacionActual(adultoId: string, enabled = true) {
   return useQuery<Ubicacion | null>({
     queryKey: clavesUbicaciones.actual(adultoId),
+    enabled: enabled && adultoId !== '',
     queryFn: async () => {
       try {
         return await ubicacionesApi.actual(adultoId)

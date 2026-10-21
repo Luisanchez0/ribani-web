@@ -7,6 +7,7 @@ import { AuditoriaPage } from '@/features/auditoria'
 import { LoginPage } from '@/features/auth'
 import { ContactosAdminPage } from '@/features/contactos'
 import { ContactosPage } from '@/features/contactos'
+import { ConfigPage } from '@/features/config'
 import { DispositivosPage } from '@/features/dispositivos'
 import { FamiliaresPage } from '@/features/familiares'
 import { RelacionesAdminPage } from '@/features/familiares'
@@ -18,6 +19,7 @@ import { UbicacionesPage } from '@/features/ubicaciones'
 import { UbicacionesAdminPage } from '@/features/ubicaciones'
 import { UsuariosPage } from '@/features/usuarios'
 import { ZonasSegurasPage } from '@/features/zonas-seguras'
+import { WhatsappPage } from '@/features/whatsapp'
 
 import { RequireAuth } from './guards/require-auth'
 import { RequireRole, ROL_ADMINISTRADOR } from './guards/require-role'
@@ -47,6 +49,8 @@ export function AppRouter() {
           <Route path="contactos" element={<ContactosPage />} />
           <Route path="dispositivos" element={<DispositivosPage />} />
           <Route path="familiares" element={<FamiliaresPage />} />
+          <Route path="config" element={<ConfigPage />} />
+          <Route path="whatsapp" element={<WhatsappPage />} />
         </Route>
       </Route>
 
@@ -64,6 +68,7 @@ export function AppRouter() {
             <Route path="contactos" element={<ContactosAdminPage />} />
             <Route path="roles" element={<RolesPage />} />
             <Route path="auditoria" element={<AuditoriaPage />} />
+            <Route path="whatsapp" element={<WhatsappPage />} />
           </Route>
         </Route>
       </Route>

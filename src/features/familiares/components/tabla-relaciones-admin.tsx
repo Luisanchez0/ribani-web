@@ -28,11 +28,14 @@ export function TablaRelacionesAdmin({
   ocupados,
   onRevocar,
   onEliminar,
+  onDosPasos,
 }: {
   vinculos: VinculoAdmin[]
   ocupados: Set<string>
   onRevocar: (id: string) => void
   onEliminar: (id: string) => void
+  /** Abre el modal de 2FA asistido para el adulto del vínculo. */
+  onDosPasos?: (vinculo: VinculoAdmin) => void
 }) {
   return (
     <div className="rounded-lg border border-salvia-200 bg-white shadow-sm">
@@ -109,6 +112,16 @@ export function TablaRelacionesAdmin({
                   </Td>
                   <Td>
                     <div className="flex flex-wrap items-center justify-end gap-2">
+                      {onDosPasos && vinculo.estado === 'ACTIVA' && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          disabled={ocupado}
+                          onClick={() => onDosPasos(vinculo)}
+                        >
+                          2FA
+                        </Button>
+                      )}
                       <Button
                         variant="secondary"
                         size="sm"

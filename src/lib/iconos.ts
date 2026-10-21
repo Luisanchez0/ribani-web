@@ -10,6 +10,8 @@
 import BellAlert from 'reicon-react-native/icons/BellAlert.js'
 import CallCalling from 'reicon-react-native/icons/CallCalling.js'
 import ClipboardText from 'reicon-react-native/icons/ClipboardText.js'
+import Edit2 from 'reicon-react-native/icons/Edit2.js'
+import Gear from 'reicon-react-native/icons/Gear.js'
 import Home from 'reicon-react-native/icons/Home.js'
 import Map2 from 'reicon-react-native/icons/Map2.js'
 import Pill from 'reicon-react-native/icons/Pill.js'
@@ -23,6 +25,8 @@ export {
   BellAlert as IconoAlertas,
   CallCalling as IconoContactos,
   ClipboardText as IconoAuditoria,
+  Edit2 as IconoLapiz,
+  Gear as IconoAjustes,
   Home as IconoInicio,
   Map2 as IconoUbicaciones,
   Pill as IconoMedicamentos,
