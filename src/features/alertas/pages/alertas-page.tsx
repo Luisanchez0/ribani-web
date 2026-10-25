@@ -4,6 +4,11 @@ import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { Td, Table, Th } from '@/components/ui/table'
 import { IconoAlertas } from '@/lib/iconos'
+import {
+  ANCHO_NORMAL,
+  BARRA_FILTROS,
+  CONTROL_FILTRO,
+} from '@/lib/clases-filtros'
 import { formatFechaHora } from '@/lib/format'
 import { useAdultos } from '@/features/usuarios'
 import { useMisAdultos } from '@/features/familiares'
@@ -16,6 +21,7 @@ import {
 import {
   useActualizarAlerta,
   useAlertas,
+  useEliminarAlerta,
   type Alerta,
   type TransicionAlerta,
 } from '../api/alertas.api'
@@ -26,6 +32,7 @@ export function AlertasPage() {
   const misAdultos = useMisAdultos()
   const whatsapp = useResumenWhatsapp()
   const actualizar = useActualizarAlerta()
+  const eliminar = useEliminarAlerta()
 
   const [estadoFiltro, setEstadoFiltro] = useState('')
   const [verHistorial, setVerHistorial] = useState(false)
@@ -73,6 +80,15 @@ export function AlertasPage() {
     actualizar.mutate({ id: alerta.id, cuerpo })
   }
 
+  /** Baja lógica: la alerta pasa a CANCELADA y desaparece del historial. */
+  function quitar(alerta: Alerta) {
+    const confirmado = window.confirm(
+      `¿Eliminar del historial la alerta "${alerta.titulo}"? La fila se conserva para auditoría.`,
+    )
+    if (!confirmado) return
+    eliminar.mutate(alerta.id)
+  }
+
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -118,7 +134,7 @@ export function AlertasPage() {
       </p>
 
       {/* Filtro por estado */}
-      <div className="flex flex-wrap items-end gap-3 rounded-lg border border-salvia-200 bg-white p-4 shadow-sm">
+      <div className={BARRA_FILTROS}>
         <div>
           <label
             htmlFor="filtro-alerta-estado-panel"
@@ -130,7 +146,7 @@ export function AlertasPage() {
             id="filtro-alerta-estado-panel"
             value={estadoFiltro}
             onChange={(e) => setEstadoFiltro(e.target.value)}
-            className="mt-1 rounded-md border border-salvia-300 bg-white px-3 py-2 text-sm text-pino-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600"
+            className={`${CONTROL_FILTRO} ${ANCHO_NORMAL}`}
           >
             <option value="">Todos</option>
             <option value="ABIERTA">Abierta</option>
@@ -181,9 +197,15 @@ export function AlertasPage() {
             resumenWhatsapp={whatsapp.isError ? undefined : whatsapp.data}
             nombreAdulto={nombreAdulto}
             onTransicionar={transicionar}
-            ocupados={
-              actualizar.isPending ? [actualizar.variables?.id ?? ''] : []
-            }
+            onEliminar={quitar}
+            ocupados={[
+              ...(actualizar.isPending && actualizar.variables
+                ? [actualizar.variables.id]
+                : []),
+              ...(eliminar.isPending && eliminar.variables
+                ? [eliminar.variables]
+                : []),
+            ]}
           />
         )}
       </div>
@@ -224,6 +246,7 @@ type TablaAlertasProps = {
   resumenWhatsapp: ResumenWhatsapp[] | undefined
   nombreAdulto: Map<string, string>
   onTransicionar: (alerta: Alerta, cuerpo: TransicionAlerta) => void
+  onEliminar: (alerta: Alerta) => void
   ocupados: string[]
 }
 
@@ -232,6 +255,7 @@ function TablaAlertas({
   resumenWhatsapp,
   nombreAdulto,
   onTransicionar,
+  onEliminar,
   ocupados,
 }: TablaAlertasProps) {
   return (
@@ -323,7 +347,7 @@ function TablaAlertas({
                   )}
                   {!cerrada && (
                     <Button
-                      variant="danger"
+                      variant="secondary"
                       size="sm"
                       disabled={ocupado}
                       onClick={() =>
@@ -336,6 +360,14 @@ function TablaAlertas({
                       Cancelar
                     </Button>
                   )}
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    disabled={ocupado}
+                    onClick={() => onEliminar(alerta)}
+                  >
+                    Eliminar
+                  </Button>
                 </div>
               </Td>
             </tr>

@@ -4,6 +4,12 @@ import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { Td, Table, Th } from '@/components/ui/table'
 import { IconoMedicamentos } from '@/lib/iconos'
+import {
+  ANCHO_LARGO,
+  ANCHO_NORMAL,
+  BARRA_FILTROS,
+  CONTROL_FILTRO,
+} from '@/lib/clases-filtros'
 import { formatFecha } from '@/lib/format'
 import { useAdultos } from '@/features/usuarios'
 
@@ -16,7 +22,7 @@ import type { Medicamento } from '../types'
  * La edición sigue siendo tarea del familiar encargado desde su panel.
  */
 export function MedicamentosAdminPage() {
-  const medicamentos = useMedicamentos({ soloActivos: 'false' })
+  const medicamentos = useMedicamentos({ soloActivos: false })
   const adultos = useAdultos()
 
   // Filtros: adulto (GET de backend), texto (cliente) y estado (cliente).
@@ -67,7 +73,7 @@ export function MedicamentosAdminPage() {
       </div>
 
       {/* Filtros: adulto, texto y estado */}
-      <div className="flex flex-wrap items-end gap-3 rounded-lg border border-salvia-200 bg-white p-4 shadow-sm">
+      <div className={BARRA_FILTROS}>
         <div>
           <label
             htmlFor="filtro-med-adulto"
@@ -79,7 +85,7 @@ export function MedicamentosAdminPage() {
             id="filtro-med-adulto"
             value={adultoSel}
             onChange={(e) => setAdultoSel(e.target.value)}
-            className="mt-1 rounded-md border border-salvia-300 bg-white px-3 py-2 text-sm text-pino-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600"
+            className={`${CONTROL_FILTRO} ${ANCHO_LARGO}`}
           >
             <option value="">Todos</option>
             {(adultos.data ?? []).map((adulto) => (
@@ -101,7 +107,7 @@ export function MedicamentosAdminPage() {
             id="filtro-med-buscar"
             type="search"
             placeholder="Nombre o instrucciones…"
-            className="mt-1 w-56 rounded-md border border-salvia-300 bg-white px-3 py-2 text-sm text-pino-950 placeholder:text-salvia-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600"
+            className={`${CONTROL_FILTRO} ${ANCHO_NORMAL}`}
             value={busqueda}
             onChange={(evento) => setBusqueda(evento.target.value)}
           />

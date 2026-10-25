@@ -25,6 +25,21 @@ export type Ubicacion = {
   registrada_en: string
 }
 
+/**
+ * GET /ubicaciones/ultimas — última ubicación de cada adulto activo.
+ * Solo administrador; una fila por adulto que ya reportó alguna vez.
+ */
+export type UbicacionResumenAdulto = {
+  adulto_id: string
+  nombre: string
+  apellido: string
+  latitud: number
+  longitud: number
+  precision_metros: number | null
+  fuente: 'GPS' | 'RED' | 'MANUAL' | 'OTRA'
+  registrada_en: string
+}
+
 /** POST /ubicaciones — body (CreateUbicacionDto). */
 export type RegistrarUbicacion =
   components['schemas']['CreateUbicacionDto']

@@ -93,8 +93,9 @@ function claseEstado(estado: Toma['estado']): string {
  * generador más los puntuales, con:
  * - filtros de estado y rango de fechas;
  * - acciones rápidas TOMAR/OMITIR sobre pendientes;
- * - edición de fecha/nota y eliminación de pendientes
- *   (el backend solo permite DELETE de tomas PENDIENTE).
+ * - edición de fecha/nota de las pendientes;
+ * - eliminación de cualquier toma del historial (baja lógica en el backend:
+ *   la fila pasa a CANCELADA, se conserva la auditoría y deja de listarse).
  *
  * Los errores del server (ventana de registro, toma registrada, etc.)
  * se muestran tal cual llegan en el mensaje del axios error.
@@ -178,7 +179,8 @@ export function TomasPanel({ medicamentos }: TomasPanelProps) {
           </h2>
           <p className="text-sm text-salvia-600">
             Registros concretos generados por los horarios (o puntuales).
-            Puedes modificar su fecha/nota, omitir o eliminar las pendientes.
+            Puedes modificar su fecha/nota, omitir las pendientes o quitar
+            cualquier registro del historial.
           </p>
         </div>
         <Button
@@ -376,29 +378,30 @@ export function TomasPanel({ medicamentos }: TomasPanelProps) {
                         >
                           Editar
                         </Button>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          disabled={ocupado || toma.estado !== 'PENDIENTE'}
-                          onClick={() => {
-                            const confirmado = window.confirm(
-                              `¿Eliminar la toma pendiente de las ${formatFechaHora(toma.programada_para)}?`,
-                            )
-                            if (!confirmado) return
-                            setErrorAccion(null)
-                            eliminar.mutate(toma.id, {
-                              onError: (error) =>
-                                manejarError(
-                                  'No se pudo eliminar la toma.',
-                                  error,
-                                ),
-                            })
-                          }}
-                        >
-                          Eliminar
-                        </Button>
                       </>
                     )}
+
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      disabled={ocupado}
+                      onClick={() => {
+                        const confirmado = window.confirm(
+                          `¿Eliminar del historial la toma del ${formatFechaHora(toma.programada_para)}? Dejará de aparecer en la lista.`,
+                        )
+                        if (!confirmado) return
+                        setErrorAccion(null)
+                        eliminar.mutate(toma.id, {
+                          onError: (error) =>
+                            manejarError(
+                              'No se pudo eliminar la toma.',
+                              error,
+                            ),
+                        })
+                      }}
+                    >
+                      Eliminar
+                    </Button>
                   </div>
                 </li>
               )

@@ -1,20 +1,21 @@
-import { apiClient } from '@/lib/api-client'
+import { apiClient, esperarRefrescoSesion } from '@/lib/api-client'
+import { useAuthStore } from '@/stores/auth-store'
 
 import type {
   CredencialesLogin,
   ConfigDosPasos,
   DatosRegistro,
-  RefrescoSesion,
   RespuestaLogin,
   RespuestaDosPasos,
   RespuestaTokens,
 } from '../types'
-
+let logoutEnCurso: Promise<void> | null = null
 
 export const authApi = {
-  login(credenciales: CredencialesLogin): Promise<RespuestaLogin> {
+  async login(credenciales: CredencialesLogin): Promise<RespuestaLogin> {
+    await logoutEnCurso?.catch(() => undefined)
     return apiClient
-      .post<RespuestaLogin>('/auth/login', credenciales)
+      .post<RespuestaLogin>('/auth/web/login', credenciales, { withCredentials: true })
       .then((response) => response.data)
   },
 
@@ -23,16 +24,25 @@ export const authApi = {
    * código TOTP contra el challengeToken devuelto por /auth/login
    * (TwoFactorLoginDto) y emite los tokens definitivos.
    */
-  loginDosPasos(challengeToken: string, code: string): Promise<RespuestaTokens> {
+  async loginDosPasos(challengeToken: string, code: string): Promise<RespuestaTokens> {
+    await logoutEnCurso?.catch(() => undefined)
     return apiClient
-      .post<RespuestaTokens>('/auth/2fa/login', { challengeToken, code })
+      .post<RespuestaTokens>('/auth/web/2fa/login', { challengeToken, code }, { withCredentials: true })
       .then((response) => response.data)
   },
 
-  logout(refresco: RefrescoSesion): Promise<void> {
-    return apiClient
-      .post<void>('/auth/logout', refresco)
-      .then(() => undefined)
+  logout(): Promise<void> {
+    if (logoutEnCurso) return logoutEnCurso
+    const revision = useAuthStore.getState().sessionRevision
+    const promise = (async () => {
+      await esperarRefrescoSesion()
+      await apiClient.post('/auth/web/logout', {}, { withCredentials: true, timeout: 15000 })
+      if (useAuthStore.getState().sessionRevision === revision) useAuthStore.getState().confirmarCierreSesion()
+    })()
+    logoutEnCurso = promise
+    const liberar = () => { if (logoutEnCurso === promise) logoutEnCurso = null }
+    void promise.then(liberar, liberar)
+    return promise
   },
 
   register(datos: DatosRegistro): Promise<unknown> {

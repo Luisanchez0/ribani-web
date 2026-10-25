@@ -4,10 +4,16 @@ import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { Td, Table, Th } from '@/components/ui/table'
 import { IconoAlertas } from '@/lib/iconos'
+import {
+  ANCHO_LARGO,
+  ANCHO_NORMAL,
+  BARRA_FILTROS,
+  CONTROL_FILTRO,
+} from '@/lib/clases-filtros'
 import { formatFechaHora } from '@/lib/format'
 import { useAdultos } from '@/features/usuarios'
 
-import { useAlertas, type Alerta } from '../api/alertas.api'
+import { useAlertas, useEliminarAlerta, type Alerta } from '../api/alertas.api'
 
 
 export function AlertasAdminPage() {
@@ -25,6 +31,16 @@ export function AlertasAdminPage() {
   )
 
   const alertas = useAlertas(params)
+  const eliminar = useEliminarAlerta()
+
+  /** Baja lógica: la alerta pasa a CANCELADA y sale del historial. */
+  function quitar(alerta: Alerta) {
+    const confirmado = window.confirm(
+      `¿Eliminar del historial la alerta "${alerta.titulo}"? La fila se conserva para auditoría.`,
+    )
+    if (!confirmado) return
+    eliminar.mutate(alerta.id)
+  }
 
   /** Nombre del adulto por id (map de la lista de usuarios). */
   const nombreAdulto = useMemo(() => {
@@ -50,7 +66,7 @@ export function AlertasAdminPage() {
       </p>
 
       {/* Filtros */}
-      <div className="flex flex-wrap items-end gap-3 rounded-lg border border-salvia-200 bg-white p-4 shadow-sm">
+      <div className={BARRA_FILTROS}>
         <div>
           <label
             htmlFor="filtro-alerta-adulto"
@@ -62,7 +78,7 @@ export function AlertasAdminPage() {
             id="filtro-alerta-adulto"
             value={adultoFiltro}
             onChange={(e) => setAdultoFiltro(e.target.value)}
-            className="mt-1 rounded-md border border-salvia-300 bg-white px-3 py-2 text-sm text-pino-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600"
+            className={`${CONTROL_FILTRO} ${ANCHO_LARGO}`}
           >
             <option value="">Todos</option>
             {(adultos.data ?? []).map((adulto) => (
@@ -84,7 +100,7 @@ export function AlertasAdminPage() {
             id="filtro-alerta-estado"
             value={estadoFiltro}
             onChange={(e) => setEstadoFiltro(e.target.value)}
-            className="mt-1 rounded-md border border-salvia-300 bg-white px-3 py-2 text-sm text-pino-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600"
+            className={`${CONTROL_FILTRO} ${ANCHO_NORMAL}`}
           >
             <option value="">Todos</option>
             <option value="ABIERTA">Abierta</option>
@@ -128,7 +144,14 @@ export function AlertasAdminPage() {
             </p>
           </div>
         ) : (
-          <TablaAlertas alertas={alertas.data} nombreAdulto={nombreAdulto} />
+          <TablaAlertas
+            alertas={alertas.data}
+            nombreAdulto={nombreAdulto}
+            onEliminar={quitar}
+            ocupados={
+              eliminar.isPending && eliminar.variables ? [eliminar.variables] : []
+            }
+          />
         )}
       </div>
     </section>
@@ -156,9 +179,13 @@ const clasesEstado: EstadoClases = {
 function TablaAlertas({
   alertas,
   nombreAdulto,
+  onEliminar,
+  ocupados,
 }: {
   alertas: Alerta[]
   nombreAdulto: Map<string, string>
+  onEliminar: (alerta: Alerta) => void
+  ocupados: string[]
 }) {
   return (
     <Table>
@@ -170,6 +197,9 @@ function TablaAlertas({
           <Th>Título</Th>
           <Th>Severidad</Th>
           <Th>Estado</Th>
+          <Th>
+            <span className="sr-only">Acciones</span>
+          </Th>
         </tr>
       </thead>
       <tbody>
@@ -196,6 +226,16 @@ function TablaAlertas({
               >
                 {alerta.estado.toLowerCase()}
               </span>
+            </Td>
+            <Td className="text-right">
+              <Button
+                variant="danger"
+                size="sm"
+                disabled={ocupados.includes(alerta.id)}
+                onClick={() => onEliminar(alerta)}
+              >
+                Eliminar
+              </Button>
             </Td>
           </tr>
         ))}

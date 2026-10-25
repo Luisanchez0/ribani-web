@@ -4,6 +4,7 @@ import type {
   FiltrosHistorial,
   RegistrarUbicacion,
   Ubicacion,
+  UbicacionResumenAdulto,
 } from '../types'
 
 
@@ -25,6 +26,26 @@ export const ubicacionesApi = {
     return apiClient
       .get<Ubicacion>('/ubicaciones/actual', { params: { adultoId } })
       .then((response) => mapearUbicacion(response.data))
+  },
+
+  /**
+   * GET /ubicaciones/ultimas — última ubicación de todos los adultos activos
+   * en una sola respuesta (mapa del panel administrador).
+   */
+  ultimas(): Promise<UbicacionResumenAdulto[]> {
+    return apiClient
+      .get<UbicacionResumenAdulto[]>('/ubicaciones/ultimas')
+      .then((response) =>
+        response.data.map((fila) => ({
+          ...fila,
+          latitud: Number(fila.latitud),
+          longitud: Number(fila.longitud),
+          precision_metros:
+            fila.precision_metros === null
+              ? null
+              : Number(fila.precision_metros),
+        })),
+      )
   },
 
   /** GET /ubicaciones/historial — últimas N ubicaciones (desc). */

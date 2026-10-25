@@ -3,6 +3,11 @@ import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { IconoFamiliares } from '@/lib/iconos'
+import {
+  ANCHO_NORMAL,
+  BARRA_FILTROS,
+  CONTROL_FILTRO,
+} from '@/lib/clases-filtros'
 
 import { DosPasosAdultoModal } from '../components/dos-pasos-adulto-modal'
 import { TablaRelacionesAdmin } from '../components/tabla-relaciones-admin'
@@ -99,7 +104,7 @@ export function RelacionesAdminPage() {
       </p>
 
       {/* Filtros: búsqueda y estado */}
-      <div className="flex flex-wrap items-end gap-3 rounded-lg border border-salvia-200 bg-white p-4 shadow-sm">
+      <div className={BARRA_FILTROS}>
         <div>
           <label
             htmlFor="filtro-rel-buscar"
@@ -111,7 +116,7 @@ export function RelacionesAdminPage() {
             id="filtro-rel-buscar"
             type="search"
             placeholder="Nombre o correo del familiar o adulto…"
-            className="mt-1 w-64 rounded-md border border-salvia-300 bg-white px-3 py-2 text-sm text-pino-950 placeholder:text-salvia-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600"
+            className={`${CONTROL_FILTRO} ${ANCHO_NORMAL}`}
             value={busqueda}
             onChange={(evento) => setBusqueda(evento.target.value)}
           />
@@ -128,7 +133,7 @@ export function RelacionesAdminPage() {
             id="filtro-rel-estado"
             value={estadoFiltro}
             onChange={(e) => setEstadoFiltro(e.target.value)}
-            className="mt-1 rounded-md border border-salvia-300 bg-white px-3 py-2 text-sm text-pino-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600"
+            className={`${CONTROL_FILTRO} ${ANCHO_NORMAL}`}
           >
             <option value="">Todos</option>
             <option value="ACTIVA">Activa</option>

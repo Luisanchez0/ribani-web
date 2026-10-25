@@ -84,7 +84,7 @@ export function UbicacionesPage() {
                   setSeguir(true)
                   setAdultoSeleccionado(evento.target.value)
                 }}
-                className="rounded-md border border-salvia-300 bg-white px-3 py-2 text-sm text-pino-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600"
+                className="w-72 rounded-md border border-salvia-300 bg-white px-3 py-2 text-sm text-pino-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600"
               >
                 {activos.map((adulto) => (
                   <option key={adulto.id} value={adulto.id}>

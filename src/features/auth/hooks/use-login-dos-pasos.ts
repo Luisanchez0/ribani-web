@@ -23,7 +23,6 @@ export function useLoginDosPasos() {
     onSuccess: (respuesta) => {
       setSesion({
         accessToken: respuesta.accessToken,
-        refreshToken: respuesta.refreshToken,
         usuario: respuesta.user,
       })
 

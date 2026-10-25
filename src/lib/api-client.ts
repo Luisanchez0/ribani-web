@@ -20,7 +20,7 @@ import type { components } from '@/types/api'
  */
 
 /** Forma de la respuesta del backend al emitir tokens (auth.service.ts). */
-type TokensEmitidos = components['schemas']['TokensRespuestaDto']
+type TokensEmitidos = components['schemas']['TokensWebRespuestaDto']
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: env.apiUrl,
@@ -48,14 +48,51 @@ type RequestSesion = InternalAxiosRequestConfig & {
 
 let refreshEnCurso: { revision: number; promise: Promise<TokensEmitidos> } | null = null
 
-async function refrescarTokens(refreshToken: string): Promise<TokensEmitidos> {
+async function refrescarTokens(): Promise<TokensEmitidos> {
   // Axios puro (sin interceptores) para no recursar sobre el propio refresh.
   const { data } = await axios.post<TokensEmitidos>(
-    `${env.apiUrl}/auth/refresh`,
-    { refreshToken },
+    `${env.apiUrl}/auth/web/refresh`,
+    {},
+    { withCredentials: true, timeout: 15000 },
   )
 
   return data
+}
+
+function refreshCompartido(revision: number): Promise<TokensEmitidos> {
+  if (!refreshEnCurso || refreshEnCurso.revision !== revision) {
+    const promise = refrescarTokens()
+    const actual = { revision, promise }
+    refreshEnCurso = actual
+    const liberar = () => { if (refreshEnCurso === actual) refreshEnCurso = null }
+    void promise.then(liberar, liberar)
+  }
+  return refreshEnCurso.promise
+}
+
+/** El logout espera la rotación en vuelo para revocar la cookie más reciente. */
+export async function esperarRefrescoSesion(): Promise<void> {
+  try { await refreshEnCurso?.promise } catch { /* El logout también limpia una sesión vencida. */ }
+}
+
+/** Restaurar una recarga desde la cookie HttpOnly antes de montar las rutas. */
+export async function restaurarSesion(): Promise<void> {
+  const { sessionRevision, setSesion, clearSesion, logoutPendiente, confirmarCierreSesion } = useAuthStore.getState()
+  if (logoutPendiente) {
+    // Una salida sin red no debe convertirse en un nuevo login al recargar.
+    try {
+      await axios.post(`${env.apiUrl}/auth/web/logout`, {}, { withCredentials: true, timeout: 15000 })
+      if (useAuthStore.getState().sessionRevision === sessionRevision) confirmarCierreSesion()
+    } catch { /* Conservar la intención de salir hasta poder revocar la cookie. */ }
+    return
+  }
+  try {
+    const tokens = await refreshCompartido(sessionRevision)
+    if (useAuthStore.getState().sessionRevision !== sessionRevision) return
+    setSesion({ accessToken: tokens.accessToken, usuario: tokens.user })
+  } catch {
+    if (useAuthStore.getState().sessionRevision === sessionRevision) clearSesion()
+  }
 }
 
 apiClient.interceptors.response.use(
@@ -79,40 +116,31 @@ apiClient.interceptors.response.use(
       status !== 401 ||
       !config ||
       config.ribaniReintentada ||
-      config.url?.includes('/auth/')
+      (config.url?.startsWith('/auth/') && config.url !== '/auth/me') ||
+      config.url === '/usuarios/perfil/password' ||
+      /^\/usuarios\/[^/]+\/2fa\/verify$/.test(config.url ?? '')
     ) {
       throw error
     }
 
-    const { refreshToken, setSesion, clearSesion, sessionRevision } =
+    const { token, setSesion, clearSesion, sessionRevision } =
       useAuthStore.getState()
 
     // Una petición de la sesión anterior no puede renovar ni cerrar la actual.
     if (config.ribaniRevision !== sessionRevision) throw error
 
-    if (!refreshToken) {
+    if (!token) {
       clearSesion()
       throw error
     }
 
     try {
       // Single-flight: ante varios 401 concurrentes, se refresca una sola vez.
-      if (!refreshEnCurso || refreshEnCurso.revision !== sessionRevision) {
-        const promise = refrescarTokens(refreshToken)
-        const actual = { revision: sessionRevision, promise }
-        refreshEnCurso = actual
-        const liberar = () => {
-          if (refreshEnCurso === actual) refreshEnCurso = null
-        }
-        void promise.then(liberar, liberar)
-      }
-
-      const tokens = await refreshEnCurso.promise
+      const tokens = await refreshCompartido(sessionRevision)
       if (useAuthStore.getState().sessionRevision !== sessionRevision) throw error
 
       setSesion({
         accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
         usuario: tokens.user,
       })
 

@@ -1,14 +1,13 @@
 import type { components } from '@/types/api'
 
 export type CredencialesLogin = components['schemas']['LoginDto']
-export type RefrescoSesion = components['schemas']['RefreshTokenDto']
 
 
 export type DatosRegistro = components['schemas']['RegisterDto']
 
 export const ROL_FAMILIAR_ENCARGADO = 'FAMILIAR_ENCARGADO' as const
 
-export type RespuestaTokens = components['schemas']['TokensRespuestaDto']
+export type RespuestaTokens = components['schemas']['TokensWebRespuestaDto']
 
 /** Variante de login cuando la cuenta tiene 2FA activado. */
 export type RespuestaDesafioDosPasos = components['schemas']['DesafioDosPasosDto']

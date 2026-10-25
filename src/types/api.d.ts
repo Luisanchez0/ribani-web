@@ -212,6 +212,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/forgot-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_forgotPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_resetPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/2fa/setup": {
         parameters: {
             query?: never;
@@ -286,6 +318,70 @@ export interface paths {
         get: operations["AuthController_me"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/web/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["WebAuthController_login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/web/2fa/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["WebAuthController_loginWithTwoFactor"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/web/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["WebAuthController_refresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/web/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["WebAuthController_logout"];
         delete?: never;
         options?: never;
         head?: never;
@@ -482,6 +578,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["MedicamentosController_update"];
+        trace?: never;
+    };
+    "/horarios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["HorariosListaController_findAll"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/medicamentos/{medicamentoId}/horarios": {
@@ -772,6 +884,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ubicaciones/ultimas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UbicacionesController_ultimas"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ubicaciones/actual": {
         parameters: {
             query?: never;
@@ -878,7 +1006,7 @@ export interface paths {
         get: operations["AlertasController_obtener"];
         put?: never;
         post?: never;
-        delete?: never;
+        delete: operations["AlertasController_eliminar"];
         options?: never;
         head?: never;
         patch: operations["AlertasController_actualizar"];
@@ -1027,6 +1155,8 @@ export interface components {
             telefono: string | null;
             /** Format: date-time */
             email_verificado_en: string | null;
+            /** @description Segundo factor TOTP activo; nunca expone el secreto. */
+            two_factor_enabled: boolean;
             activo: boolean;
             /** Format: date-time */
             ultimo_acceso_en: string | null;
@@ -1149,6 +1279,23 @@ export interface components {
         MensajeRespuestaDto: {
             message: string;
         };
+        SolicitarResetPasswordDto: {
+            /**
+             * Format: email
+             * @example ana@ejemplo.mx
+             */
+            email: string;
+        };
+        ResetPasswordDto: {
+            /**
+             * Format: email
+             * @example ana@ejemplo.mx
+             */
+            email: string;
+            /** @description Código de 6 dígitos enviado por correo. */
+            codigo: string;
+            password: string;
+        };
         TwoFactorLoginDto: {
             challengeToken: string;
             code: string;
@@ -1170,6 +1317,13 @@ export interface components {
             permisos: string[];
             /** Format: date-time */
             ultimoAcceso: string | null;
+        };
+        TokensWebRespuestaDto: {
+            accessToken: string;
+            /** @enum {string} */
+            tokenType: "Bearer";
+            expiresIn: number;
+            user: components["schemas"]["UsuarioSesionDto"];
         };
         IntegracionWhatsappDto: {
             habilitada: boolean;
@@ -1278,6 +1432,18 @@ export interface components {
             email?: string;
             prioridad?: number;
         };
+        ContactoRespuestaDto: {
+            id: string;
+            adulto_id: string;
+            nombre: string;
+            parentesco?: string | null;
+            telefono: string;
+            email?: string | null;
+            prioridad: number;
+            activo: boolean;
+            /** Format: date-time */
+            created_at: string;
+        };
         UpdateContactoDto: {
             nombre?: string;
             parentesco?: string;
@@ -1299,6 +1465,26 @@ export interface components {
             fecha_fin?: string;
             zona_horaria?: string;
         };
+        MedicamentoRespuestaDto: {
+            id: string;
+            adulto_id: string;
+            nombre: string;
+            descripcion?: string | null;
+            dosis: number;
+            unidad_dosis: string;
+            instrucciones?: string | null;
+            /** Format: date */
+            fecha_inicio: string;
+            /** Format: date */
+            fecha_fin?: string | null;
+            zona_horaria: string;
+            activo: boolean;
+            creado_por?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
         UpdateMedicamentoDto: {
             nombre?: string;
             descripcion?: string;
@@ -1309,6 +1495,21 @@ export interface components {
             fecha_fin?: string;
             zona_horaria?: string;
             activo?: boolean;
+        };
+        HorarioRespuestaDto: {
+            id: string;
+            medicamento_id: string;
+            /** @description Hora local del día, HH:mm:ss. */
+            hora_local: Record<string, never>;
+            /** @description Días de la semana ISO (1=lunes … 7=domingo). */
+            dias_semana: number[];
+            /** @description Minutos entre tomas dentro del horario (0 = único evento). */
+            intervalo_minutos: number;
+            /** @description Ventana en minutos alrededor de la hora para registrar. */
+            ventana_minutos: number;
+            activo: boolean;
+            /** Format: date-time */
+            created_at: string;
         };
         CreateHorarioDto: {
             hora_local: string;
@@ -1374,6 +1575,41 @@ export interface components {
             /** @enum {string} */
             estado?: "ACTIVA" | "PENDIENTE";
         };
+        UsuarioResumenDto: {
+            id: string;
+            nombre: string;
+            apellido: string;
+            email: string;
+            telefono?: string | null;
+            activo?: boolean;
+        };
+        VinculoFamiliarRespuestaDto: {
+            id: string;
+            adulto_id: string;
+            familiar_id: string;
+            parentesco?: string | null;
+            es_contacto_principal: boolean;
+            puede_ver_ubicacion: boolean;
+            puede_gestionar_medicamentos: boolean;
+            /** @enum {string} */
+            estado: "PENDIENTE" | "ACTIVA" | "REVOCADA";
+            /** Format: date-time */
+            created_at: string;
+            usuarios_adulto_familiares_adulto_idTousuarios?: components["schemas"]["UsuarioResumenDto"] | null;
+            usuarios_adulto_familiares_familiar_idTousuarios?: components["schemas"]["UsuarioResumenDto"] | null;
+        };
+        AdultoVinculadoRespuestaDto: {
+            id: string;
+            vinculo_id: string;
+            nombre: string;
+            apellido: string;
+            email: string;
+            parentesco?: string | null;
+            es_contacto_principal: boolean;
+            puede_ver_ubicacion: boolean;
+            puede_gestionar_medicamentos: boolean;
+            estado: string;
+        };
         UpdateFamiliarDto: {
             parentesco?: string;
             es_contacto_principal?: boolean;
@@ -1394,6 +1630,31 @@ export interface components {
             puede_ver_ubicacion?: boolean;
             puede_gestionar_medicamentos?: boolean;
         };
+        InvitacionAdultoDto: {
+            id: string;
+            nombre?: string | null;
+            apellido?: string | null;
+            email: string;
+            esNuevaCuenta?: boolean;
+        };
+        InvitacionFamiliarRespuestaDto: {
+            id: string;
+            adulto_id: string;
+            familiar_id: string;
+            parentesco?: string | null;
+            es_contacto_principal: boolean;
+            puede_ver_ubicacion: boolean;
+            puede_gestionar_medicamentos: boolean;
+            /** @enum {string} */
+            estado: "PENDIENTE" | "ACTIVA" | "REVOCADA";
+            /** Format: date-time */
+            created_at: string;
+            usuarios_adulto_familiares_adulto_idTousuarios?: components["schemas"]["UsuarioResumenDto"] | null;
+            usuarios_adulto_familiares_familiar_idTousuarios?: components["schemas"]["UsuarioResumenDto"] | null;
+            adulto: components["schemas"]["InvitacionAdultoDto"];
+            esNuevaCuenta: boolean;
+            mensaje: string;
+        };
         CompletarInvitacionFamiliarDto: {
             /** Format: email */
             email: string;
@@ -1401,6 +1662,11 @@ export interface components {
             nombre?: string;
             apellido?: string;
             telefono?: string;
+        };
+        CompletarInvitacionRespuestaDto: {
+            adulto_id: string;
+            email: string;
+            mensaje: string;
         };
         CreateZonaSeguraDto: {
             /** Format: uuid */
@@ -1411,6 +1677,21 @@ export interface components {
             radio_metros: number;
             notificar_salida?: boolean;
             notificar_entrada?: boolean;
+        };
+        ZonaSeguraRespuestaDto: {
+            id: string;
+            adulto_id: string;
+            nombre: string;
+            latitud_centro: number;
+            longitud_centro: number;
+            radio_metros: number;
+            notificar_salida: boolean;
+            notificar_entrada: boolean;
+            activa: boolean;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
         };
         UpdateZonaSeguraDto: {
             nombre?: string;
@@ -1432,8 +1713,39 @@ export interface components {
             fuente?: "GPS" | "RED" | "MANUAL";
             registrada_en?: string;
         };
+        UbicacionRespuestaDto: {
+            id: string;
+            adulto_id: string;
+            dispositivo_id?: string | null;
+            latitud: number;
+            longitud: number;
+            precision_metros?: number | null;
+            altitud_metros?: number | null;
+            /** @enum {string} */
+            fuente: "GPS" | "RED" | "MANUAL" | "OTRA";
+            /** Format: date-time */
+            registrada_en: string;
+        };
         CrearLoteUbicacionesDto: {
             reportes: components["schemas"]["CreateUbicacionDto"][];
+        };
+        LoteUbicacionesRespuestaDto: {
+            /** @description Reportes insertados en la base. */
+            insertados: number;
+            ultima_reporte: components["schemas"]["UbicacionRespuestaDto"];
+        };
+        UbicacionAdultoResumenDto: {
+            /** Format: uuid */
+            adulto_id: string;
+            nombre: string;
+            apellido: string;
+            latitud: number;
+            longitud: number;
+            precision_metros?: number | null;
+            /** @enum {string} */
+            fuente: "GPS" | "RED" | "MANUAL" | "OTRA";
+            /** Format: date-time */
+            registrada_en: string;
         };
         CreateAlertaDto: {
             /** Format: uuid */
@@ -1449,6 +1761,34 @@ export interface components {
             latitud?: number;
             longitud?: number;
         };
+        AlertaRespuestaDto: {
+            id: string;
+            adulto_id: string;
+            dispositivo_id?: string | null;
+            /** @enum {string} */
+            tipo: "CAIDA" | "SOS" | "SALIDA_ZONA";
+            /** @enum {string} */
+            severidad: "BAJA" | "MEDIA" | "ALTA" | "CRITICA";
+            /** @enum {string} */
+            estado: "ABIERTA" | "EN_ATENCION" | "RESUELTA" | "CANCELADA";
+            titulo: string;
+            descripcion?: string | null;
+            latitud?: number | null;
+            longitud?: number | null;
+            /** Format: date-time */
+            ocurrida_en: string;
+            atendida_por?: string | null;
+            /** Format: date-time */
+            atendida_en?: string | null;
+            /** Format: date-time */
+            cerrada_en?: string | null;
+            /** Format: date-time */
+            created_at: string;
+        };
+        IntervaloUbicacionRespuestaDto: {
+            /** @description Segundos recomendados entre reportes. */
+            intervalo_segundos: number;
+        };
         ResolverAlertaDto: {
             /** @enum {string} */
             estado: "CANCELADA" | "EN_ATENCION" | "RESUELTA";
@@ -1462,10 +1802,41 @@ export interface components {
             push_token?: string;
             version_app?: string;
         };
+        DispositivoRespuestaDto: {
+            id: string;
+            usuario_id: string;
+            nombre: string;
+            /** @enum {string} */
+            plataforma: "ANDROID" | "WEB" | "OTRO";
+            version_app?: string | null;
+            /** Format: date-time */
+            ultimo_contacto_en?: string | null;
+            activo: boolean;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
         UpdateDispositivoDto: {
             nombre?: string;
             push_token?: string;
             version_app?: string;
+        };
+        PermisoRespuestaDto: {
+            id: string;
+            codigo: string;
+            recurso: string;
+            accion: string;
+            descripcion?: string | null;
+        };
+        RolRespuestaDto: {
+            id: number;
+            /** @enum {string} */
+            codigo: "ADULTO_MAYOR" | "FAMILIAR_ENCARGADO" | "ADMINISTRADOR";
+            nombre: string;
+            descripcion?: string | null;
+            activo: boolean;
+            permisos: components["schemas"]["PermisoRespuestaDto"][];
         };
         UpdateRolDto: {
             nombre?: string;
@@ -1474,6 +1845,25 @@ export interface components {
         };
         AsignarPermisosDto: {
             permisos: string[];
+        };
+        ActorAuditoriaDto: {
+            nombre: string;
+            apellido: string;
+            email: string;
+        };
+        EventoAuditoriaRespuestaDto: {
+            id: string;
+            actor_id?: string | null;
+            accion: string;
+            entidad: string;
+            entidad_id?: string | null;
+            ip?: string | null;
+            user_agent?: string | null;
+            /** @description Cambios aplicados (JSON). */
+            datos_despues?: Record<string, never> | null;
+            /** Format: date-time */
+            created_at: string;
+            actor?: components["schemas"]["ActorAuditoriaDto"] | null;
         };
     };
     responses: never;
@@ -1868,6 +2258,52 @@ export interface operations {
             };
         };
     };
+    AuthController_forgotPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SolicitarResetPasswordDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MensajeRespuestaDto"];
+                };
+            };
+        };
+    };
+    AuthController_resetPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetPasswordDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MensajeRespuestaDto"];
+                };
+            };
+        };
+    };
     AuthController_setupTwoFactor: {
         parameters: {
             query?: never;
@@ -1971,6 +2407,90 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UsuarioActualDto"];
+                };
+            };
+        };
+    };
+    WebAuthController_login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokensWebRespuestaDto"] | components["schemas"]["DesafioDosPasosDto"];
+                };
+            };
+        };
+    };
+    WebAuthController_loginWithTwoFactor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TwoFactorLoginDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokensWebRespuestaDto"];
+                };
+            };
+        };
+    };
+    WebAuthController_refresh: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokensWebRespuestaDto"];
+                };
+            };
+        };
+    };
+    WebAuthController_logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MensajeRespuestaDto"];
                 };
             };
         };
@@ -2211,7 +2731,8 @@ export interface operations {
     ContactosController_findAll: {
         parameters: {
             query?: {
-                soloActivos?: string;
+                soloActivos?: boolean;
+                limite?: number;
             };
             header?: never;
             path?: never;
@@ -2223,7 +2744,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ContactoRespuestaDto"][];
+                };
             };
         };
     };
@@ -2244,7 +2767,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ContactoRespuestaDto"];
+                };
             };
         };
     };
@@ -2263,7 +2788,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ContactoRespuestaDto"];
+                };
             };
         };
     };
@@ -2305,15 +2832,18 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ContactoRespuestaDto"];
+                };
             };
         };
     };
     MedicamentosController_findAll: {
         parameters: {
             query?: {
-                soloActivos?: string;
                 adultoId?: string;
+                soloActivos?: boolean;
+                limite?: number;
             };
             header?: never;
             path?: never;
@@ -2325,7 +2855,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MedicamentoRespuestaDto"][];
+                };
             };
         };
     };
@@ -2346,7 +2878,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MedicamentoRespuestaDto"];
+                };
             };
         };
     };
@@ -2365,7 +2899,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MedicamentoRespuestaDto"];
+                };
             };
         };
     };
@@ -2407,14 +2943,41 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MedicamentoRespuestaDto"];
+                };
+            };
+        };
+    };
+    HorariosListaController_findAll: {
+        parameters: {
+            query?: {
+                adultoId?: string;
+                medicamentoId?: string;
+                soloActivos?: boolean;
+                limite?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HorarioRespuestaDto"][];
+                };
             };
         };
     };
     HorariosController_findAll: {
         parameters: {
             query?: {
-                soloActivos?: string;
+                soloActivos?: boolean;
+                limite?: number;
             };
             header?: never;
             path: {
@@ -2428,7 +2991,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["HorarioRespuestaDto"][];
+                };
             };
         };
     };
@@ -2451,7 +3016,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["HorarioRespuestaDto"];
+                };
             };
         };
     };
@@ -2471,7 +3038,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["HorarioRespuestaDto"];
+                };
             };
         };
     };
@@ -2515,7 +3084,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["HorarioRespuestaDto"];
+                };
             };
         };
     };
@@ -2524,9 +3095,11 @@ export interface operations {
             query?: {
                 adultoId?: string;
                 medicamentoId?: string;
-                estado?: string;
+                estado?: "PENDIENTE" | "POSPUESTA" | "TOMADA" | "OMITIDA" | "CANCELADA";
                 desde?: string;
                 hasta?: string;
+                incluirCanceladas?: boolean;
+                limite?: number;
             };
             header?: never;
             path?: never;
@@ -2599,6 +3172,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description Toma eliminada del historial (baja lógica). */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2656,7 +3230,9 @@ export interface operations {
     };
     FamiliaresController_findAll: {
         parameters: {
-            query?: never;
+            query?: {
+                limite?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -2667,7 +3243,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["VinculoFamiliarRespuestaDto"][];
+                };
             };
         };
     };
@@ -2688,13 +3266,17 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["VinculoFamiliarRespuestaDto"];
+                };
             };
         };
     };
     FamiliaresController_misAdultos: {
         parameters: {
-            query?: never;
+            query?: {
+                limite?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -2706,14 +3288,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, never>;
+                    "application/json": components["schemas"]["AdultoVinculadoRespuestaDto"][];
                 };
             };
         };
     };
     FamiliaresController_misFamiliares: {
         parameters: {
-            query?: never;
+            query?: {
+                limite?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -2724,7 +3308,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["VinculoFamiliarRespuestaDto"][];
+                };
             };
         };
     };
@@ -2743,7 +3329,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["VinculoFamiliarRespuestaDto"];
+                };
             };
         };
     };
@@ -2762,7 +3350,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["VinculoFamiliarRespuestaDto"];
+                };
             };
         };
     };
@@ -2785,7 +3375,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["VinculoFamiliarRespuestaDto"];
+                };
             };
         };
     };
@@ -2806,7 +3398,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["InvitacionFamiliarRespuestaDto"];
+                };
             };
         };
     };
@@ -2827,7 +3421,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CompletarInvitacionRespuestaDto"];
+                };
             };
         };
     };
@@ -2846,7 +3442,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["VinculoFamiliarRespuestaDto"];
+                };
             };
         };
     };
@@ -2865,7 +3463,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["VinculoFamiliarRespuestaDto"];
+                };
             };
         };
     };
@@ -2882,7 +3482,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["VinculoFamiliarRespuestaDto"][];
+                };
             };
         };
     };
@@ -2890,7 +3492,8 @@ export interface operations {
         parameters: {
             query?: {
                 adultoId?: string;
-                soloActivas?: string;
+                soloActivas?: boolean;
+                limite?: number;
             };
             header?: never;
             path?: never;
@@ -2902,7 +3505,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ZonaSeguraRespuestaDto"][];
+                };
             };
         };
     };
@@ -2923,7 +3528,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ZonaSeguraRespuestaDto"];
+                };
             };
         };
     };
@@ -2942,7 +3549,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ZonaSeguraRespuestaDto"];
+                };
             };
         };
     };
@@ -2961,7 +3570,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": Record<string, never>;
+                };
             };
         };
     };
@@ -2984,7 +3595,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ZonaSeguraRespuestaDto"];
+                };
             };
         };
     };
@@ -3006,7 +3619,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, never>;
+                    "application/json": components["schemas"]["UbicacionRespuestaDto"];
                 };
             };
         };
@@ -3028,7 +3641,28 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["LoteUbicacionesRespuestaDto"];
+                };
+            };
+        };
+    };
+    UbicacionesController_ultimas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UbicacionAdultoResumenDto"][];
+                };
             };
         };
     };
@@ -3048,18 +3682,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, never>;
+                    "application/json": components["schemas"]["UbicacionRespuestaDto"];
                 };
             };
         };
     };
     UbicacionesController_historial: {
         parameters: {
-            query: {
-                adultoId: string;
+            query?: {
+                adultoId?: string;
                 desde?: string;
                 hasta?: string;
-                limite?: string;
+                limite?: number;
             };
             header?: never;
             path?: never;
@@ -3072,7 +3706,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, never>[];
+                    "application/json": components["schemas"]["UbicacionRespuestaDto"][];
                 };
             };
         };
@@ -3102,8 +3736,9 @@ export interface operations {
         parameters: {
             query?: {
                 adultoId?: string;
-                estado?: string;
-                limite?: string;
+                estado?: "ABIERTA" | "EN_ATENCION" | "RESUELTA" | "CANCELADA";
+                incluirCanceladas?: boolean;
+                limite?: number;
             };
             header?: never;
             path?: never;
@@ -3115,7 +3750,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AlertaRespuestaDto"][];
+                };
             };
         };
     };
@@ -3136,7 +3773,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AlertaRespuestaDto"];
+                };
             };
         };
     };
@@ -3153,7 +3792,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["IntervaloUbicacionRespuestaDto"];
+                };
             };
         };
     };
@@ -3193,7 +3834,31 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AlertaRespuestaDto"];
+                };
+            };
+        };
+    };
+    AlertasController_eliminar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Alerta eliminada del historial (baja lógica). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertaRespuestaDto"];
+                };
             };
         };
     };
@@ -3216,7 +3881,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AlertaRespuestaDto"];
+                };
             };
         };
     };
@@ -3224,7 +3891,8 @@ export interface operations {
         parameters: {
             query?: {
                 usuarioId?: string;
-                soloActivas?: string;
+                soloActivas?: boolean;
+                limite?: number;
             };
             header?: never;
             path?: never;
@@ -3236,7 +3904,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DispositivoRespuestaDto"][];
+                };
             };
         };
     };
@@ -3257,7 +3927,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DispositivoRespuestaDto"];
+                };
             };
         };
     };
@@ -3276,7 +3948,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DispositivoRespuestaDto"];
+                };
             };
         };
     };
@@ -3295,7 +3969,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DispositivoRespuestaDto"];
+                };
             };
         };
     };
@@ -3337,7 +4013,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DispositivoRespuestaDto"];
+                };
             };
         };
     };
@@ -3354,7 +4032,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["PermisoRespuestaDto"][];
+                };
             };
         };
     };
@@ -3371,7 +4051,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RolRespuestaDto"][];
+                };
             };
         };
     };
@@ -3390,7 +4072,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RolRespuestaDto"];
+                };
             };
         };
     };
@@ -3409,7 +4093,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RolRespuestaDto"];
+                };
             };
         };
     };
@@ -3432,7 +4118,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RolRespuestaDto"];
+                };
             };
         };
     };
@@ -3455,7 +4143,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RolRespuestaDto"];
+                };
             };
         };
     };
@@ -3468,7 +4158,7 @@ export interface operations {
                 accion?: string;
                 desde?: string;
                 hasta?: string;
-                limite?: string;
+                limite?: number;
             };
             header?: never;
             path?: never;
@@ -3480,7 +4170,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["EventoAuditoriaRespuestaDto"][];
+                };
             };
         };
     };

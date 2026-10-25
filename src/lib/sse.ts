@@ -4,6 +4,7 @@ import {
 } from '@microsoft/fetch-event-source'
 
 import { env } from '@/config/env'
+import { apiClient } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth-store'
 
 /**
@@ -49,6 +50,7 @@ export function abrirStreamSse(
   // slashes y el backend (rutas de raíz) responde 404. new URL(path, base)
   // resuelve '/x' relativo a la base sin duplicar la barra.
   const url = new URL(path, env.apiUrl.endsWith('/') ? env.apiUrl : `${env.apiUrl}/`)
+  const transport = window.fetch.bind(window)
 
   void fetchEventSource(url.toString(), {
     method: 'GET',
@@ -56,6 +58,16 @@ export function abrirStreamSse(
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     signal: controller.signal,
+    fetch: async (input, init) => {
+      const response = await transport(input, init)
+      if (response.status !== 401 || controller.signal.aborted) return response
+      // Reutilizar el refresh único del cliente HTTP, sin poner tokens en URL.
+      await apiClient.get('/auth/me', { signal: controller.signal })
+      if (useAuthStore.getState().sessionRevision !== sessionRevision) throw new Error('La sesión cambió.')
+      const refreshed = useAuthStore.getState().token
+      if (!refreshed) throw new Error('Sesión finalizada.')
+      return transport(input, { ...init, headers: { ...init?.headers, Authorization: `Bearer ${refreshed}` } })
+    },
     // Es un panel de monitoreo: los eventos deben seguir llegando
     // aunque la pestaña quede en segundo plano.
     openWhenHidden: true,
@@ -77,7 +89,10 @@ export function abrirStreamSse(
       if (!controller.signal.aborted) opciones.onMessage?.(evento)
     },
     onclose: () => {
-      if (!controller.signal.aborted) opciones.onClose?.()
+      if (!controller.signal.aborted) {
+        opciones.onClose?.()
+        opciones.onError?.(new Error('El canal se cerró; se requiere reconexión.'))
+      }
     },
     onerror: (error) => {
       if (controller.signal.aborted) throw error

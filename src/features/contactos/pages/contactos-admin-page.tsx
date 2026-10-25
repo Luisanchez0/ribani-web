@@ -4,6 +4,12 @@ import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { Td, Table, Th } from '@/components/ui/table'
 import { IconoContactos } from '@/lib/iconos'
+import {
+  ANCHO_LARGO,
+  ANCHO_NORMAL,
+  BARRA_FILTROS,
+  CONTROL_FILTRO,
+} from '@/lib/clases-filtros'
 import { useAdultos } from '@/features/usuarios'
 
 import { useContactos } from '../hooks'
@@ -69,7 +75,7 @@ export function ContactosAdminPage() {
       </div>
 
       {/* Filtros: adulto y búsqueda de texto */}
-      <div className="flex flex-wrap items-end gap-3 rounded-lg border border-salvia-200 bg-white p-4 shadow-sm">
+      <div className={BARRA_FILTROS}>
         <div>
           <label
             htmlFor="filtro-con-adulto"
@@ -81,7 +87,7 @@ export function ContactosAdminPage() {
             id="filtro-con-adulto"
             value={adultoSel}
             onChange={(e) => setAdultoSel(e.target.value)}
-            className="mt-1 rounded-md border border-salvia-300 bg-white px-3 py-2 text-sm text-pino-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600"
+            className={`${CONTROL_FILTRO} ${ANCHO_LARGO}`}
           >
             <option value="">Todos</option>
             {(adultos.data ?? []).map((adulto) => (
@@ -103,7 +109,7 @@ export function ContactosAdminPage() {
             id="filtro-con-buscar"
             type="search"
             placeholder="Nombre, teléfono o correo…"
-            className="mt-1 w-56 rounded-md border border-salvia-300 bg-white px-3 py-2 text-sm text-pino-950 placeholder:text-salvia-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600"
+            className={`${CONTROL_FILTRO} ${ANCHO_NORMAL}`}
             value={busqueda}
             onChange={(evento) => setBusqueda(evento.target.value)}
           />

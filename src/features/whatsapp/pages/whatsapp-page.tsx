@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Alert } from '@/components/ui/alert'
+import { PAISES_TELEFONO } from '@/features/auth/datos/paises-telefono'
 import { contactosApi } from '@/features/contactos'
 import { useAdultos } from '@/features/usuarios'
 import { useMisAdultos } from '@/features/familiares'
@@ -24,6 +25,22 @@ import { etiquetaWhatsapp } from '../utils/estados'
 const seccion = 'space-y-4'
 const campo = 'rounded-md border border-salvia-300 bg-white px-3 py-2 text-sm'
 
+/**
+ * La BD guarda E.164 (+52, +51...). El formulario separa el código de país
+ * para que el usuario no tenga que escribirlo; si el número guardado no
+ * coincide con ningún país de la lista se devuelve tal cual.
+ */
+function partirTelefono(guardado: string | null | undefined): {
+  codigo: string
+  local: string
+} {
+  const numero = (guardado ?? '').trim()
+  const pais = PAISES_TELEFONO.find((p) => numero.startsWith(p.codigo))
+  return pais
+    ? { codigo: pais.codigo, local: numero.slice(pais.codigo.length) }
+    : { codigo: PAISES_TELEFONO[0].codigo, local: numero.replace(/^\+/, '') }
+}
+
 function mensajeError(error: unknown) {
   const body = (error as { response?: { data?: { message?: unknown } } })
     ?.response?.data
@@ -37,7 +54,12 @@ export function WhatsappPage() {
   const admin = usuario?.rol.codigo === 'ADMINISTRADOR'
   const w = useWhatsapp()
   const resumen = useResumenWhatsapp()
-  const [telefono, setTelefono] = useState(usuario?.telefono ?? '')
+  const [codigoPais, setCodigoPais] = useState(
+    () => partirTelefono(usuario?.telefono).codigo,
+  )
+  const [telefono, setTelefono] = useState(
+    () => partirTelefono(usuario?.telefono).local,
+  )
   const [contactoId, setContactoId] = useState('')
   const [adultoId, setAdultoId] = useState('')
   const contactos = useQuery({
@@ -106,7 +128,7 @@ export function WhatsappPage() {
           e.preventDefault()
           w.accion.mutate(() =>
             whatsappApi.registrar({
-              telefono_e164: telefono,
+              telefono_e164: `${codigoPais}${telefono.replace(/\D/g, '')}`,
               ...(contactoId ? { contacto_emergencia_id: contactoId } : {}),
             }),
           )
@@ -114,9 +136,9 @@ export function WhatsappPage() {
       >
         <h2 className="font-semibold text-pino-900">Registrar destinatario</h2>
         <p className="text-sm text-salvia-700">
-          Tu número debe coincidir con el de tu perfil, con prefijo
-          internacional (por ejemplo +525512345678). El registro queda pendiente
-          de consentimiento.
+          Elige el país y escribe el número sin el código; se guarda en formato
+          internacional (por ejemplo +52 55 1234 5678) y debe coincidir con el
+          del perfil. El registro queda pendiente de consentimiento.
         </p>
         {admin && (
           <label className="block space-y-1 text-sm">
@@ -126,12 +148,12 @@ export function WhatsappPage() {
               value={contactoId}
               onChange={(e) => {
                 setContactoId(e.target.value)
-                setTelefono(
+                const elegido = partirTelefono(
                   contactos.data?.find((c) => c.id === e.target.value)
-                    ?.telefono ??
-                    usuario?.telefono ??
-                    '',
+                    ?.telefono ?? usuario?.telefono,
                 )
+                setCodigoPais(elegido.codigo)
+                setTelefono(elegido.local)
               }}
             >
               <option value="">Mi cuenta</option>
@@ -148,17 +170,41 @@ export function WhatsappPage() {
         {admin && contactos.isError && (
           <Alert>No se pudieron cargar los contactos de emergencia.</Alert>
         )}
-        <label className="block space-y-1 text-sm">
-          Teléfono internacional
-          <Input
-            value={telefono}
-            onChange={(e) => setTelefono(e.target.value)}
-            type="tel"
-            pattern="\+[1-9][0-9]{7,14}"
-            required
-            maxLength={16}
-          />
-        </label>
+        <div className="space-y-1 text-sm">
+          <label htmlFor="whatsapp-telefono" className="block">
+            Teléfono
+          </label>
+          <div className="flex gap-2">
+            <select
+              id="whatsapp-codigo-pais"
+              aria-label="Código de país"
+              className={`${campo} w-auto shrink-0`}
+              value={codigoPais}
+              onChange={(e) => setCodigoPais(e.target.value)}
+            >
+              {PAISES_TELEFONO.map((pais) => (
+                <option key={pais.codigo} value={pais.codigo}>
+                  {pais.bandera} {pais.codigo}
+                </option>
+              ))}
+            </select>
+            <Input
+              id="whatsapp-telefono"
+              value={telefono}
+              onChange={(e) => setTelefono(e.target.value)}
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel-national"
+              placeholder="55 1234 5678"
+              required
+              maxLength={14}
+            />
+          </div>
+          <p className="text-xs text-salvia-600">
+            Se registrará como {codigoPais}
+            {telefono.replace(/\D/g, '') || '…'}.
+          </p>
+        </div>
         <Button type="submit" disabled={w.accion.isPending}>
           Registrar pendiente
         </Button>
