@@ -62,6 +62,13 @@ export const alertasApi = {
       .patch(`/alertas/${id}`, cuerpo)
       .then(() => undefined)
   },
+
+  /** DELETE /alertas/{id} — borra la alerta del historial (baja lógica). */
+  eliminar(id: string) {
+    return apiClient
+      .delete(`/alertas/${id}`)
+      .then(() => undefined)
+  },
 }
 
 /** Claves de cache de la feature. */
@@ -90,6 +97,18 @@ export function useAlerta(id: string) {
   return useQuery({
     queryKey: clavesAlertas.detalle(id),
     queryFn: () => alertasApi.obtener(id),
+  })
+}
+
+/** DELETE /alertas/{id} — quita la alerta del historial (familiar o admin). */
+export function useEliminarAlerta() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => alertasApi.eliminar(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: clavesAlertas.todos })
+    },
   })
 }
 

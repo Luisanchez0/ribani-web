@@ -1,9 +1,14 @@
 import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { Select } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { Td, Table, Th } from '@/components/ui/table'
 import { IconoAuditoria } from '@/lib/iconos'
+import {
+  BARRA_FILTROS,
+  CONTROL_FILTRO,
+} from '@/lib/clases-filtros'
 import { formatFechaHora } from '@/lib/format'
 
 import { useAuditoria } from '../hooks'
@@ -119,20 +124,20 @@ export function AuditoriaPage() {
       </p>
 
       {/* Filtros (query params reales del backend) */}
-      <div className="rounded-lg border border-salvia-200 bg-white p-4 shadow-sm">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className={BARRA_FILTROS}>
+        <div className="contents">
           <div>
             <label
               htmlFor="filtro-entidad"
-              className="text-xs font-medium text-salvia-600"
+              className="block text-sm font-medium text-salvia-700"
             >
               Entidad
             </label>
-            <select
+            <Select
               id="filtro-entidad"
               value={entidad}
               onChange={(e) => setEntidad(e.target.value)}
-              className="mt-1 w-full rounded-md border border-salvia-300 bg-white px-3 py-2 text-sm text-pino-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600"
+              className="mt-1.5"
             >
               <option value="">Todas</option>
               {[...entidades].map((e) => (
@@ -140,21 +145,21 @@ export function AuditoriaPage() {
                   {e}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
           <div>
             <label
               htmlFor="filtro-accion"
-              className="text-xs font-medium text-salvia-600"
+              className="block text-sm font-medium text-salvia-700"
             >
               Acción
             </label>
-            <select
+            <Select
               id="filtro-accion"
               value={accion}
               onChange={(e) => setAccion(e.target.value)}
-              className="mt-1 w-full rounded-md border border-salvia-300 bg-white px-3 py-2 text-sm text-pino-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600"
+              className="mt-1.5"
             >
               <option value="">Todas</option>
               {[...acciones].map((a) => (
@@ -162,13 +167,13 @@ export function AuditoriaPage() {
                   {a}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
           <div>
             <label
               htmlFor="filtro-actor"
-              className="text-xs font-medium text-salvia-600"
+              className="block text-sm font-medium text-salvia-700"
             >
               Actor (UUID)
             </label>
@@ -178,15 +183,15 @@ export function AuditoriaPage() {
               placeholder="ID del usuario…"
               value={actorEmail}
               onChange={(e) => setActorEmail(e.target.value)}
-              className="mt-1 w-full rounded-md border border-salvia-300 bg-white px-3 py-2 text-sm text-pino-950 placeholder:text-salvia-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600"
+              className={CONTROL_FILTRO}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="contents">
             <div>
               <label
                 htmlFor="filtro-desde"
-                className="text-xs font-medium text-salvia-600"
+                className="block text-sm font-medium text-salvia-700"
               >
                 Desde
               </label>
@@ -195,13 +200,13 @@ export function AuditoriaPage() {
                 type="date"
                 value={desde}
                 onChange={(e) => setDesde(e.target.value)}
-                className="mt-1 w-full rounded-md border border-salvia-300 bg-white px-3 py-2 text-sm text-pino-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600"
+                className={CONTROL_FILTRO}
               />
             </div>
             <div>
               <label
                 htmlFor="filtro-hasta"
-                className="text-xs font-medium text-salvia-600"
+                className="block text-sm font-medium text-salvia-700"
               >
                 Hasta
               </label>
@@ -210,14 +215,14 @@ export function AuditoriaPage() {
                 type="date"
                 value={hasta}
                 onChange={(e) => setHasta(e.target.value)}
-                className="mt-1 w-full rounded-md border border-salvia-300 bg-white px-3 py-2 text-sm text-pino-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600"
+                className={CONTROL_FILTRO}
               />
             </div>
           </div>
         </div>
 
         {filtrosActivos && (
-          <div className="mt-3 flex justify-end">
+          <div className="col-span-full flex justify-end">
             <Button variant="secondary" size="sm" onClick={limpiar}>
               Limpiar filtros
             </Button>

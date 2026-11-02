@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { useUsuarios } from '@/features/usuarios'
-import { ROL_FAMILIAR_ENCARGADO } from '@/features/auth/types'
 import { useAuthStore } from '@/stores/auth-store'
 import { useInvitarFamiliar } from '../hooks'
 
@@ -26,7 +25,7 @@ export function InvitarFamiliarModal({
   const esAdmin =
     useAuthStore((state) => state.usuario)?.rol.codigo ===
     ROL_ADMINISTRADOR
-  const usuarios = useUsuarios(esAdmin ? { rol: ROL_FAMILIAR_ENCARGADO } : undefined)
+  const usuarios = useUsuarios({ rol: 'FAMILIAR_ENCARGADO' }, esAdmin && abierto)
 
   const [cuidadorId, setCuidadorId] = useState('')
   const [adultoEmail, setAdultoEmail] = useState('')
@@ -78,12 +77,12 @@ export function InvitarFamiliarModal({
           id="titulo-invitacion-modal"
           className="font-display text-lg font-semibold text-pino-900"
         >
-          Invitar a un familiar
+          Invitar adulto mayor
         </h2>
         <p className="mt-1 text-sm/6 text-salvia-700">
           {esAdmin
-            ? 'Como administrador, indica el cuidador y el adulto a vincular.'
-            : 'Enviará una invitación para que un familiar pueda hacer seguimiento del adulto mayor.'}
+            ? 'Selecciona al cuidador que tendrá acceso e indica el correo del adulto mayor que recibirá la invitación.'
+            : 'La invitación se enviará al adulto mayor. Cuando la acepte, quedarás vinculado como su cuidador.'}
         </p>
 
         <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
@@ -93,7 +92,7 @@ export function InvitarFamiliarModal({
                 htmlFor="invitacion-cuidador"
                 className="block text-sm font-medium text-pino-900"
               >
-                Cuidador (usuario familiar)
+                Cuidador que quedará vinculado
               </label>
               {usuarios.isPending ? (
                 <div className="flex items-center gap-3 py-2 text-sm text-salvia-600">
@@ -130,7 +129,7 @@ export function InvitarFamiliarModal({
               htmlFor="invitacion-adulto-email"
               className="block text-sm font-medium text-pino-900"
             >
-              Correo del adulto
+              Correo del adulto mayor que recibirá la invitación
             </label>
             <Input
               id="invitacion-adulto-email"
@@ -141,8 +140,8 @@ export function InvitarFamiliarModal({
               onChange={(evento) => setAdultoEmail(evento.target.value)}
             />
             <p className="text-xs text-salvia-600">
-              Si no existe esa cuenta, se creará inactiva y la invitación
-              quedará registrada de inmediato.
+              Si aún no tiene cuenta, podrá completar su registro con este correo.
+              El vínculo requiere que el adulto mayor acepte la invitación.
             </p>
           </div>
 
@@ -174,7 +173,7 @@ export function InvitarFamiliarModal({
                 onChange={(evento) => setAdultoApellido(evento.target.value)}
               />
               <p className="text-xs text-salvia-600">
-                Vacío: el backend usará "RIBANI" como apellido por defecto.
+                Puedes dejarlo vacío si todavía no conoces su apellido completo.
               </p>
             </div>
           </div>
@@ -213,7 +212,7 @@ export function InvitarFamiliarModal({
 
           <fieldset className="space-y-2">
             <legend className="text-sm font-medium text-pino-900">
-              Permisos para el familiar invitado
+              Acceso que tendrá {esAdmin ? 'el cuidador seleccionado' : 'tu cuenta'} al aceptar el adulto
             </legend>
             <div className="flex items-center gap-2">
               <input

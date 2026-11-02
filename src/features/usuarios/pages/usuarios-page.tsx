@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { IconoUsuarios } from '@/lib/iconos'
+import { BARRA_FILTROS, CONTROL_FILTRO } from '@/lib/clases-filtros'
 
 import { UsuariosTabla } from '../components/usuarios-tabla'
 import { UsuarioFormularioModal } from '../components/usuario-formulario-modal'
@@ -100,27 +101,28 @@ export function UsuariosPage() {
           Usuarios
         </h1>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <label htmlFor="buscar-usuario" className="sr-only">
-            Buscar usuario
-          </label>
+        <Button
+          onClick={() => {
+            setUsuarioEditar(null)
+            setModalAbierto(true)
+          }}
+        >
+          Nuevo usuario
+        </Button>
+      </div>
+
+      <div className={BARRA_FILTROS}>
+        <label htmlFor="buscar-usuario" className="block text-sm font-medium text-salvia-700">
+          Buscar usuario
           <input
             id="buscar-usuario"
             type="search"
-            placeholder="Buscar por nombre o correo…"
-            className="w-56 rounded-md border border-salvia-300 bg-white px-3 py-2 text-sm text-pino-950 placeholder:text-salvia-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600"
+            placeholder="Nombre o correo…"
+            className={CONTROL_FILTRO}
             value={busqueda}
             onChange={(evento) => setBusqueda(evento.target.value)}
           />
-          <Button
-            onClick={() => {
-              setUsuarioEditar(null)
-              setModalAbierto(true)
-            }}
-          >
-            Nuevo usuario
-          </Button>
-        </div>
+        </label>
       </div>
 
       {errorAccion && (

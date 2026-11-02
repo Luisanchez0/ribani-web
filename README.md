@@ -87,6 +87,23 @@ No editar `src/types/api.d.ts` manualmente. Ya se regeneró desde el contrato
 actualizado; autenticación, sesión y usuarios/perfil consumen sus schemas.
 Falta documentar las respuestas y sustituir tipos HTTP manuales de otros dominios.
 
+## Contenedor
+
+`Dockerfile` construye el SPA y lo sirve con nginx (`docker/nginx.conf`):
+fallback a `index.html` para React Router, caché inmutable en `/assets` y
+`no-cache` en el HTML.
+
+`VITE_API_URL` se incrusta en el bundle al construir, así que se pasa como
+argumento y debe ser HTTPS (el build falla si no lo es):
+
+```bash
+docker build -t ribani-web --build-arg VITE_API_URL=https://api.tudominio.com .
+docker run --rm -p 8081:80 ribani-web   # http://localhost:8081
+```
+
+En el servidor se despliega junto al backend con `ribani-server/deploy/vps`; ver
+[despliegue en VPS](../ribani-server/docs/despliegue-vps.md).
+
 ## Estado de esta revisión
 
 La sección WhatsApp está disponible en `/panel/whatsapp` y `/admin/whatsapp`:

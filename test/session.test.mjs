@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { beforeEach, mock, test } from 'node:test'
 
 const storage = new Map()
+storage.set('ribani-auth', JSON.stringify({ state: { token: 'legacy-access', refreshToken: 'legacy-refresh' } }))
 globalThis.localStorage = {
   getItem: (key) => storage.get(key) ?? null,
   setItem: (key, value) => storage.set(key, value),
@@ -11,12 +12,13 @@ const { queryClient } = await import('../src/lib/query-client.ts')
 globalThis.window = { localStorage: globalThis.localStorage }
 const { useAuthStore } = await import('../src/stores/auth-store.ts')
 const { apiClient } = await import('../src/lib/api-client.ts')
+const { restaurarSesion } = await import('../src/lib/api-client.ts')
 const { default: axios, AxiosError } = await import('axios')
 const originalAdapter = apiClient.defaults.adapter
 
 function sesion(id = 'usuario-a', accessToken = 'token-a') {
   return {
-    accessToken, refreshToken: `refresh-${id}`,
+    accessToken,
     usuario: {
       id, nombre: id, apellido: 'Prueba', email: `${id}@ribani.test`,
       telefono: null, emailVerificado: true, twoFactorEnabled: false,
@@ -29,7 +31,32 @@ beforeEach(() => {
   mock.restoreAll()
   apiClient.defaults.adapter = originalAdapter
   useAuthStore.getState().clearSesion()
+  useAuthStore.getState().confirmarCierreSesion()
   queryClient.clear()
+})
+
+test('salir sin red conserva solo una marca pública y una recarga no restaura la cookie', async () => {
+  useAuthStore.getState().setSesion(sesion())
+  useAuthStore.getState().solicitarCierreSesion()
+  const request = mock.method(axios, 'post', async () => { throw new Error('Sin red') })
+  await restaurarSesion()
+  assert.equal(useAuthStore.getState().token, null)
+  assert.equal(useAuthStore.getState().logoutPendiente, true)
+  assert.equal(storage.get('ribani-logout-pending'), '1')
+  assert.equal(request.mock.calls.every((call) => call.arguments[0].endsWith('/auth/web/logout')), true)
+  assert.equal(storage.has('ribani-auth'), false)
+})
+
+test('al volver la red se revoca la cookie pendiente y solo un login explícito abre otra sesión', async () => {
+  useAuthStore.getState().solicitarCierreSesion()
+  const request = mock.method(axios, 'post', async () => ({ data: {} }))
+  await restaurarSesion()
+  assert.equal(request.mock.calls[0].arguments[0].endsWith('/auth/web/logout'), true)
+  assert.equal(useAuthStore.getState().token, null)
+  assert.equal(useAuthStore.getState().logoutPendiente, false)
+  assert.equal(storage.has('ribani-logout-pending'), false)
+  useAuthStore.getState().setSesion(sesion())
+  assert.equal(useAuthStore.getState().token, 'token-a')
 })
 
 test('cerrar sesión elimina consultas y secretos 2FA de la caché', () => {
@@ -40,7 +67,45 @@ test('cerrar sesión elimina consultas y secretos 2FA de la caché', () => {
   assert.equal(queryClient.getQueryCache().getAll().length, 0)
   assert.equal(useAuthStore.getState().token, null)
   assert.equal(useAuthStore.getState().usuario, null)
-  assert.equal(JSON.parse(storage.get('ribani-auth')).state.refreshToken, null)
+  assert.equal(storage.has('ribani-auth'), false)
+})
+
+test('los tokens permanecen en memoria y se elimina la persistencia antigua al arrancar', () => {
+  assert.equal(storage.has('ribani-auth'), false)
+  useAuthStore.getState().setSesion(sesion())
+  assert.equal(storage.has('ribani-auth'), false)
+  assert.equal('refreshToken' in useAuthStore.getState(), false)
+})
+
+test('restaura la sesión al recargar usando cookie y sin exponer un refresh token', async () => {
+  const restored = sesion()
+  const refresh = mock.method(axios, 'post', async () => ({ data: { ...restored, user: restored.usuario } }))
+  await restaurarSesion()
+  assert.equal(useAuthStore.getState().token, restored.accessToken)
+  assert.equal(refresh.mock.calls[0].arguments[0].endsWith('/auth/web/refresh'), true)
+  assert.deepEqual(refresh.mock.calls[0].arguments[1], {})
+  assert.equal(refresh.mock.calls[0].arguments[2].withCredentials, true)
+})
+
+test('un arranque sin cookie termina sin sesión y sin errores sin manejar', async () => {
+  mock.method(axios, 'post', async () => { throw errorHttp(401) })
+  await restaurarSesion()
+  assert.equal(useAuthStore.getState().token, null)
+})
+
+test('login, segundo factor y logout usan endpoints web con cookies sin enviar tokens de refresco', async () => {
+  const { authApi } = await import('../src/features/auth/api/auth.api.ts')
+  const requests = []
+  apiClient.defaults.adapter = async (config) => {
+    requests.push(config)
+    return { data: {}, status: 201, headers: {}, config }
+  }
+  await authApi.login({ email: 'user@ribani.test', password: 'password-test' })
+  await authApi.loginDosPasos('challenge-test', '123456')
+  await authApi.logout()
+  assert.deepEqual(requests.map((config) => config.url), ['/auth/web/login', '/auth/web/2fa/login', '/auth/web/logout'])
+  assert.equal(requests.every((config) => config.withCredentials), true)
+  assert.equal(requests.some((config) => String(config.data).includes('refreshToken')), false)
 })
 
 test('cambiar de cuenta elimina los datos de la cuenta anterior', () => {
@@ -133,7 +198,7 @@ test('un refresh rechazado elimina credenciales y caché privada', async () => {
   useAuthStore.getState().setSesion(sesion())
   queryClient.setQueryData(['privado'], 'dato-privado')
   apiClient.defaults.adapter = rechazarCon401
-  mock.method(axios, 'post', async () => { throw new Error('Refresh revocado') })
+  mock.method(axios, 'post', async () => { throw errorHttp(401) })
   await assert.rejects(apiClient.get('/usuarios'))
   assert.equal(useAuthStore.getState().token, null)
   assert.equal(queryClient.getQueryData(['privado']), undefined)
@@ -178,6 +243,87 @@ test('varios 401 concurrentes renuevan una sola vez', async () => {
   assert.equal(useAuthStore.getState().token, 'renovado')
 })
 
+test('un endpoint protegido de auth también renueva el access token vencido', async () => {
+  useAuthStore.getState().setSesion(sesion())
+  mock.method(axios, 'post', async () => {
+    const renewed = sesion('usuario-a', 'renovado')
+    return { data: { ...renewed, user: renewed.usuario } }
+  })
+  apiClient.defaults.adapter = async (config) => {
+    if (config.headers.get('Authorization') !== 'Bearer renovado') return rechazarCon401(config)
+    return { data: 'ok', status: 200, headers: {}, config }
+  }
+  await apiClient.get('/auth/me')
+  assert.equal(useAuthStore.getState().token, 'renovado')
+})
+
+test('un código o contraseña de confirmación incorrectos no repiten la operación ni cierran sesión', async () => {
+  for (const url of ['/auth/2fa/verify', '/auth/2fa/disable', '/usuarios/perfil/password', '/usuarios/adulto/2fa/verify']) {
+    useAuthStore.getState().setSesion(sesion())
+    const refresh = mock.method(axios, 'post', async () => {
+      const renewed=sesion('usuario-a','renovado')
+      return {data:{...renewed,user:renewed.usuario}}
+    })
+    let attempts=0
+    apiClient.defaults.adapter = (config) => { attempts++; return rechazarCon401(config) }
+    await assert.rejects(apiClient.post(url,{code:'incorrecto'}))
+    assert.equal(useAuthStore.getState().token,'token-a')
+    assert.equal(attempts,1)
+    assert.equal(refresh.mock.callCount(),0)
+    mock.restoreAll()
+  }
+})
+
+test('logout espera un refresh en vuelo antes de revocar la cookie rotada', async () => {
+  const { authApi } = await import('../src/features/auth/api/auth.api.ts')
+  useAuthStore.getState().setSesion(sesion())
+  let resolveRefresh
+  let notifyStart
+  const started = new Promise((resolve) => { notifyStart = resolve })
+  mock.method(axios, 'post', () => {
+    notifyStart()
+    return new Promise((resolve) => { resolveRefresh = resolve })
+  })
+  const requests = []
+  apiClient.defaults.adapter = async (config) => {
+    requests.push(config.url)
+    if (config.url !== '/auth/web/logout') return rechazarCon401(config)
+    return { data: {}, status: 201, headers: {}, config }
+  }
+  const pending = apiClient.get('/usuarios').catch(() => undefined)
+  await started
+  useAuthStore.getState().clearSesion()
+  const logout = authApi.logout()
+  await new Promise(setImmediate)
+  assert.equal(requests.includes('/auth/web/logout'), false)
+  const renewed = sesion('usuario-a', 'renovado')
+  resolveRefresh({ data: { ...renewed, user: renewed.usuario } })
+  await Promise.all([pending, logout])
+  assert.equal(requests.includes('/auth/web/logout'), true)
+  assert.equal(useAuthStore.getState().token, null)
+})
+
+test('un login nuevo espera el logout pendiente para conservar su propia cookie', async () => {
+  const { authApi } = await import('../src/features/auth/api/auth.api.ts')
+  const requests = []
+  let finishLogout
+  apiClient.defaults.adapter = (config) => {
+    requests.push(config.url)
+    if (config.url === '/auth/web/logout') {
+      return new Promise((resolve) => { finishLogout = () => resolve({ data: {}, status: 201, headers: {}, config }) })
+    }
+    return Promise.resolve({ data: {}, status: 201, headers: {}, config })
+  }
+  const logout = authApi.logout()
+  await new Promise(setImmediate)
+  const login = authApi.login({ email: 'user@ribani.test', password: 'password-test' })
+  await new Promise(setImmediate)
+  assert.deepEqual(requests, ['/auth/web/logout'])
+  finishLogout()
+  await Promise.all([logout, login])
+  assert.deepEqual(requests, ['/auth/web/logout', '/auth/web/login'])
+})
+
 test('salir o cambiar de cuenta aborta el SSE y el token solo viaja en headers', async (t) => {
   useAuthStore.getState().setSesion(sesion())
   const previousWindow = globalThis.window
@@ -205,4 +351,117 @@ test('salir o cambiar de cuenta aborta el SSE y el token solo viaja en headers',
   useAuthStore.getState().setSesion(sesion('usuario-b', 'token-b'))
   assert.equal(peticiones[1].signal.aborted, true)
   cerrarOtra()
+})
+
+function errorHttp(status, config) {
+  return new AxiosError('Error HTTP', 'ERR_BAD_RESPONSE', config, undefined, {
+    status, statusText: 'Error', data: {}, headers: {}, config,
+  })
+}
+
+test('refresh y logout pendiente usan exactamente una barra con la URL normalizada', async () => {
+  const request = mock.method(axios, 'post', async () => {
+    const restored = sesion()
+    return { data: { accessToken: restored.accessToken, user: restored.usuario } }
+  })
+  await restaurarSesion()
+  assert.equal(request.mock.calls[0].arguments[0], 'http://localhost:3000/auth/web/refresh')
+  useAuthStore.getState().solicitarCierreSesion()
+  await restaurarSesion()
+  assert.equal(request.mock.calls[1].arguments[0], 'http://localhost:3000/auth/web/logout')
+})
+
+test('un fallo temporal de refresh conserva credenciales y caché privada', async () => {
+  const fallos = [403, 404, 429, 500, 503].map((status) => errorHttp(status))
+  fallos.push(new AxiosError('Sin red', 'ERR_NETWORK'), new AxiosError('Tiempo agotado', 'ECONNABORTED'))
+  for (const fallo of fallos) {
+    useAuthStore.getState().setSesion(sesion())
+    queryClient.setQueryData(['privado'], 'dato-privado')
+    apiClient.defaults.adapter = rechazarCon401
+    mock.method(axios, 'post', async () => { throw fallo })
+    await assert.rejects(apiClient.get('/usuarios'))
+    assert.equal(useAuthStore.getState().token, 'token-a', fallo.message)
+    assert.equal(queryClient.getQueryData(['privado']), 'dato-privado')
+    mock.restoreAll()
+  }
+})
+
+test('el arranque distingue el error temporal de una cookie inválida y permite reintentar', async () => {
+  const revision = useAuthStore.getState().sessionRevision
+  let disponible = false
+  mock.method(axios, 'post', async () => {
+    if (!disponible) throw errorHttp(503)
+    const restored = sesion()
+    return { data: { accessToken: restored.accessToken, user: restored.usuario } }
+  })
+  await assert.rejects(restaurarSesion())
+  assert.equal(useAuthStore.getState().sessionRevision, revision)
+  assert.equal(useAuthStore.getState().logoutPendiente, false)
+  disponible = true
+  await restaurarSesion()
+  assert.equal(useAuthStore.getState().token, 'token-a')
+})
+
+test('un refresh temporal durante la restauración tampoco borra una sesión en memoria', async () => {
+  useAuthStore.getState().setSesion(sesion())
+  mock.method(axios, 'post', async () => { throw errorHttp(500) })
+  await assert.rejects(restaurarSesion())
+  assert.equal(useAuthStore.getState().token, 'token-a')
+})
+
+test('un 500 del reintento de negocio conserva la sesión renovada', async () => {
+  useAuthStore.getState().setSesion(sesion())
+  const renewed = sesion('usuario-a', 'renovado')
+  mock.method(axios, 'post', async () => ({ data: { accessToken: renewed.accessToken, user: renewed.usuario } }))
+  apiClient.defaults.adapter = async (config) => {
+    if (config.headers.get('Authorization') === 'Bearer token-a') return rechazarCon401(config)
+    throw errorHttp(500, config)
+  }
+  await assert.rejects(apiClient.patch('/usuarios/perfil', { nombre: 'Ana' }), (error) => error.response?.status === 500)
+  assert.equal(useAuthStore.getState().token, 'renovado')
+})
+
+test('cancelar una operación mientras renueva el token no cierra sesión', async () => {
+  useAuthStore.getState().setSesion(sesion())
+  const controller = new AbortController()
+  const renewed = sesion('usuario-a', 'renovado')
+  mock.method(axios, 'post', async () => {
+    controller.abort()
+    return { data: { accessToken: renewed.accessToken, user: renewed.usuario } }
+  })
+  apiClient.defaults.adapter = rechazarCon401
+  await assert.rejects(apiClient.get('/usuarios', { signal: controller.signal }), (error) => axios.isCancel(error))
+  assert.equal(useAuthStore.getState().token, 'renovado')
+})
+
+test('un segundo 401 con el token renovado termina la sesión sin otro refresh', async () => {
+  useAuthStore.getState().setSesion(sesion())
+  const renewed = sesion('usuario-a', 'renovado')
+  const refresh = mock.method(axios, 'post', async () => ({ data: { accessToken: renewed.accessToken, user: renewed.usuario } }))
+  apiClient.defaults.adapter = rechazarCon401
+  await assert.rejects(apiClient.get('/usuarios'))
+  assert.equal(useAuthStore.getState().token, null)
+  assert.equal(refresh.mock.callCount(), 1)
+})
+
+test('un 401 tardío del token anterior reutiliza el renovado sin rotar otra cookie', async () => {
+  useAuthStore.getState().setSesion(sesion())
+  let rechazarTardia
+  const renewed = sesion('usuario-a', 'renovado')
+  const refresh = mock.method(axios, 'post', async () => ({ data: { accessToken: renewed.accessToken, user: renewed.usuario } }))
+  apiClient.defaults.adapter = async (config) => {
+    if (config.headers.get('Authorization') === 'Bearer renovado') {
+      return { data: 'ok', status: 200, headers: {}, config }
+    }
+    if (config.url === '/tardia') {
+      return new Promise((_, reject) => { rechazarTardia = () => reject(errorHttp(401, config)) })
+    }
+    return rechazarCon401(config)
+  }
+  const tardia = apiClient.get('/tardia')
+  await apiClient.get('/usuarios')
+  rechazarTardia()
+  await tardia
+  assert.equal(refresh.mock.callCount(), 1)
+  assert.equal(useAuthStore.getState().token, 'renovado')
 })

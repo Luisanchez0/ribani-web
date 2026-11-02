@@ -12,18 +12,16 @@ export function useLogout() {
     // Salir debe limpiar el estado local incluso si el navegador está offline.
     networkMode: 'always',
     mutationFn: async () => {
-      const { refreshToken, clearSesion } = useAuthStore.getState()
+      const { solicitarCierreSesion } = useAuthStore.getState()
       // La limpieza local ocurre al pulsar salir, aunque el servidor tarde.
-      clearSesion()
+      solicitarCierreSesion()
       navigate('/login', { replace: true })
       // Revocar la sesión del backend es best-effort: el usuario siempre
       // debe poder salir, aunque el refresh token ya esté revocado.
-      if (refreshToken) {
-        try {
-          await authApi.logout({ refreshToken })
-        } catch {
-          // Se ignora el error del backend y se limpia la sesión local.
-        }
+      try {
+        await authApi.logout()
+      } catch {
+        // Se ignora el error del backend y se limpia la sesión local.
       }
     },
   })

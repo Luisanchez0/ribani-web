@@ -1,8 +1,13 @@
 import { useMemo, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { Select } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { IconoFamiliares } from '@/lib/iconos'
+import {
+  BARRA_FILTROS,
+  CONTROL_FILTRO,
+} from '@/lib/clases-filtros'
 
 import { DosPasosAdultoModal } from '../components/dos-pasos-adulto-modal'
 import { TablaRelacionesAdmin } from '../components/tabla-relaciones-admin'
@@ -99,42 +104,43 @@ export function RelacionesAdminPage() {
       </p>
 
       {/* Filtros: búsqueda y estado */}
-      <div className="flex flex-wrap items-end gap-3 rounded-lg border border-salvia-200 bg-white p-4 shadow-sm">
+      <div className={BARRA_FILTROS}>
         <div>
           <label
             htmlFor="filtro-rel-buscar"
-            className="text-xs font-medium text-salvia-600"
+            className="block text-sm font-medium text-salvia-700"
           >
             Buscar
           </label>
           <input
             id="filtro-rel-buscar"
             type="search"
-            placeholder="Nombre o correo del familiar o adulto…"
-            className="mt-1 w-64 rounded-md border border-salvia-300 bg-white px-3 py-2 text-sm text-pino-950 placeholder:text-salvia-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600"
+            placeholder="Nombre o correo…"
+            className={CONTROL_FILTRO}
             value={busqueda}
             onChange={(evento) => setBusqueda(evento.target.value)}
           />
+          <p className="mt-1.5 text-xs leading-5 text-salvia-600">Busca un familiar o un adulto mayor.</p>
         </div>
 
         <div>
           <label
             htmlFor="filtro-rel-estado"
-            className="text-xs font-medium text-salvia-600"
+            className="block text-sm font-medium text-salvia-700"
           >
             Estado
           </label>
-          <select
+          <Select
             id="filtro-rel-estado"
             value={estadoFiltro}
             onChange={(e) => setEstadoFiltro(e.target.value)}
-            className="mt-1 rounded-md border border-salvia-300 bg-white px-3 py-2 text-sm text-pino-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600"
+            className="mt-1.5"
           >
             <option value="">Todos</option>
             <option value="ACTIVA">Activa</option>
             <option value="PENDIENTE">Pendiente</option>
             <option value="REVOCADA">Revocada</option>
-          </select>
+          </Select>
         </div>
       </div>
 
@@ -178,7 +184,7 @@ export function RelacionesAdminPage() {
           </p>
           <p className="mt-1 text-sm text-salvia-600">
             {(vinculos.data ?? []).length === 0
-              ? 'Usa «Invitar cuidador» o «Vincular familiar» para crear la primera.'
+              ? 'Usa «Invitar adulto mayor» en Familiares y vínculos para crear la primera relación.'
               : 'Limpia la búsqueda o cambia el filtro de estado.'}
           </p>
         </div>

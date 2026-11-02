@@ -5,6 +5,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { IconoDispositivos } from '@/lib/iconos'
 import { Td, Table, Th } from '@/components/ui/table'
 import { formatFecha } from '@/lib/format'
+import { useAuthStore } from '@/stores/auth-store'
 import { DispositivoFormularioModal } from '../components/dispositivo-formulario-modal'
 import { useDispositivos, useEliminarDispositivo } from '../hooks'
 import type { Dispositivo } from '../types'
@@ -64,6 +65,7 @@ function mensajeDeError(error: unknown): string {
  * backend.
  */
 export function DispositivosPage() {
+  const usuarioId = useAuthStore((state) => state.usuario?.id)
   const dispositivos = useDispositivos()
   const eliminar = useEliminarDispositivo()
 
@@ -78,7 +80,7 @@ export function DispositivosPage() {
 
   function eliminarDispositivo(dispositivo: Dispositivo) {
     const confirmado = window.confirm(
-      `¿Eliminar definitivamente el dispositivo ${dispositivo.nombre}? Esta acción no se puede deshacer.`,
+      `¿Desactivar el dispositivo ${dispositivo.nombre}?`,
     )
 
     if (!confirmado) return
@@ -109,6 +111,11 @@ export function DispositivosPage() {
           Registrar dispositivo
         </Button>
       </div>
+
+      <p className="text-sm/6 text-salvia-700">
+        Dispositivos de tu cuenta y de los adultos con los que tienes un vínculo activo.
+        Puedes consultar los del adulto y administrar los propios.
+      </p>
 
       {errorAccion && (
         <div
@@ -172,7 +179,12 @@ export function DispositivosPage() {
 
                 return (
                   <tr key={dispositivo.id} className="hover:bg-salvia-50">
-                    <Td className="font-medium">{dispositivo.nombre}</Td>
+                    <Td className="font-medium">
+                      {dispositivo.nombre}
+                      <span className="block text-xs font-normal text-salvia-600">
+                        {dispositivo.usuario_id === usuarioId ? 'Tu dispositivo' : 'Adulto vinculado'}
+                      </span>
+                    </Td>
                     <Td>{etiquetaPlataforma[dispositivo.plataforma]}</Td>
                     <Td>{dispositivo.version_app ?? '—'}</Td>
                     <Td>
@@ -184,32 +196,36 @@ export function DispositivosPage() {
                         : 'Nunca se conectó'}
                     </Td>
                     <Td>
-                      <div className="flex flex-wrap items-center justify-end gap-2">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          disabled={ocupado}
-                          onClick={() => {
-                            setErrorAccion(null)
-                            setDispositivoEditar(dispositivo)
-                            setModalAbierto(true)
-                          }}
-                        >
-                          Editar
-                        </Button>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          disabled={ocupado}
-                          onClick={() => eliminarDispositivo(dispositivo)}
-                        >
-                          {ocupado ? (
-                            <Spinner size="sm" label="Eliminando…" />
-                          ) : (
-                            'Eliminar'
-                          )}
-                        </Button>
-                      </div>
+                      {dispositivo.usuario_id === usuarioId ? (
+                        <div className="flex flex-wrap items-center justify-end gap-2">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            disabled={ocupado}
+                            onClick={() => {
+                              setErrorAccion(null)
+                              setDispositivoEditar(dispositivo)
+                              setModalAbierto(true)
+                            }}
+                          >
+                            Editar
+                          </Button>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            disabled={ocupado}
+                            onClick={() => eliminarDispositivo(dispositivo)}
+                          >
+                            {ocupado ? (
+                              <Spinner size="sm" label="Eliminando…" />
+                            ) : (
+                              'Eliminar'
+                            )}
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-salvia-600">Solo consulta</span>
+                      )}
                     </Td>
                   </tr>
                 )

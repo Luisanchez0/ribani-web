@@ -1,9 +1,14 @@
 import { useMemo, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { Select } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { Td, Table, Th } from '@/components/ui/table'
 import { IconoMedicamentos } from '@/lib/iconos'
+import {
+  BARRA_FILTROS,
+  CONTROL_FILTRO,
+} from '@/lib/clases-filtros'
 import { formatFecha } from '@/lib/format'
 import { useAdultos } from '@/features/usuarios'
 
@@ -16,7 +21,7 @@ import type { Medicamento } from '../types'
  * La edición sigue siendo tarea del familiar encargado desde su panel.
  */
 export function MedicamentosAdminPage() {
-  const medicamentos = useMedicamentos({ soloActivos: 'false' })
+  const medicamentos = useMedicamentos({ soloActivos: false })
   const adultos = useAdultos()
 
   // Filtros: adulto (GET de backend), texto (cliente) y estado (cliente).
@@ -67,19 +72,19 @@ export function MedicamentosAdminPage() {
       </div>
 
       {/* Filtros: adulto, texto y estado */}
-      <div className="flex flex-wrap items-end gap-3 rounded-lg border border-salvia-200 bg-white p-4 shadow-sm">
+      <div className={BARRA_FILTROS}>
         <div>
           <label
             htmlFor="filtro-med-adulto"
-            className="text-xs font-medium text-salvia-600"
+            className="block text-sm font-medium text-salvia-700"
           >
             Adulto
           </label>
-          <select
+          <Select
             id="filtro-med-adulto"
             value={adultoSel}
             onChange={(e) => setAdultoSel(e.target.value)}
-            className="mt-1 rounded-md border border-salvia-300 bg-white px-3 py-2 text-sm text-pino-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600"
+            className="mt-1.5"
           >
             <option value="">Todos</option>
             {(adultos.data ?? []).map((adulto) => (
@@ -87,13 +92,13 @@ export function MedicamentosAdminPage() {
                 {adulto.nombre} {adulto.apellido}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
 
         <div>
           <label
             htmlFor="filtro-med-buscar"
-            className="text-xs font-medium text-salvia-600"
+            className="block text-sm font-medium text-salvia-700"
           >
             Buscar
           </label>
@@ -101,13 +106,13 @@ export function MedicamentosAdminPage() {
             id="filtro-med-buscar"
             type="search"
             placeholder="Nombre o instrucciones…"
-            className="mt-1 w-56 rounded-md border border-salvia-300 bg-white px-3 py-2 text-sm text-pino-950 placeholder:text-salvia-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600"
+            className={CONTROL_FILTRO}
             value={busqueda}
             onChange={(evento) => setBusqueda(evento.target.value)}
           />
         </div>
 
-        <label className="flex items-center gap-2 text-sm text-salvia-700">
+        <label className="flex min-h-11 items-center gap-3 self-end rounded-lg border border-salvia-200 bg-salvia-50 px-3 py-2.5 text-sm text-salvia-700">
           <input
             type="checkbox"
             className="size-4 rounded border-salvia-300 accent-pino-600"

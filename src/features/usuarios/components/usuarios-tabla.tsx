@@ -53,6 +53,7 @@ export function UsuariosTabla({
           <Th>Correo electrónico</Th>
           <Th>Teléfono</Th>
           <Th>Rol</Th>
+          <Th>2FA</Th>
           <Th>Estado</Th>
           <Th>Último acceso</Th>
           <Th>
@@ -72,6 +73,24 @@ export function UsuariosTabla({
               <Td>{usuario.email}</Td>
               <Td>{usuario.telefono ?? '—'}</Td>
               <Td>{usuario.rol_id}</Td>
+              <Td>
+                {usuario.two_factor_enabled ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-pino-100 px-2 py-0.5 text-xs font-medium text-pino-800">
+                    <span
+                      aria-hidden="true"
+                      className="h-1.5 w-1.5 rounded-full bg-pino-600"
+                    />
+                    Activo
+                  </span>
+                ) : (
+                  <span
+                    className="text-xs text-salvia-500"
+                    title="El usuario no tiene segundo factor configurado"
+                  >
+                    —
+                  </span>
+                )}
+              </Td>
               <Td>
                 <BadgeEstado activo={usuario.activo} />
               </Td>

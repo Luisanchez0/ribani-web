@@ -11,6 +11,7 @@ import type {
 /** Claves de cache de la feature (convención de AGENTS.md). */
 export const clavesUbicaciones = {
   todos: ['ubicaciones'] as const,
+  ultimas: ['ubicaciones', 'ultimas'] as const,
   actual: (adultoId: string) => ['ubicaciones', 'actual', adultoId] as const,
   historial: (filtros: FiltrosHistorial & { adultoId: string }) =>
     ['ubicaciones', 'historial', filtros] as const,
@@ -33,6 +34,19 @@ export function useUbicacionActual(adultoId: string, enabled = true) {
       }
     },
     retry: 2,
+  })
+}
+
+/**
+ * GET /ubicaciones/ultimas — una petición para pintar a todos los adultos en
+ * el mapa del administrador. Se refresca cada 30 s para no depender de N SSE.
+ */
+export function useUltimasUbicaciones(enabled = true) {
+  return useQuery({
+    queryKey: clavesUbicaciones.ultimas,
+    enabled,
+    queryFn: () => ubicacionesApi.ultimas(),
+    refetchInterval: 30_000,
   })
 }
 

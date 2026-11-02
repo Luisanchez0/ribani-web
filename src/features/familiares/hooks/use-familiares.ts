@@ -101,7 +101,7 @@ export function useDesvincularFamiliar() {
   })
 }
 
-/** POST /familiares/invitaciones — invita a cuidar a un adulto. */
+/** POST /familiares/invitaciones — envía una invitación al adulto mayor. */
 export function useInvitarFamiliar() {
   const queryClient = useQueryClient()
 
