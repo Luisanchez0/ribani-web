@@ -12,7 +12,7 @@ export function resolveApiUrl(url: string | undefined, production: boolean): str
     try { valid = new URL(apiUrl).protocol === 'https:' } catch { /* URL inválida. */ }
     if (!valid) throw new Error('VITE_API_URL debe ser una URL HTTPS en producción.')
   }
-  return apiUrl
+  return apiUrl.replace(/\/+$/, '')
 }
 
 export const env = {

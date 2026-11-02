@@ -11,6 +11,7 @@ import {
 } from 'react-leaflet'
 
 import { esCoordenadaValida, formatFechaHora } from '@/lib/format'
+import type { ZonaSegura } from '@/features/zonas-seguras'
 
 import type { Ubicacion, UbicacionResumenAdulto } from '../types'
 
@@ -138,24 +139,34 @@ export function MapaUbicacion({
 }
 
 /** Encaja la vista para que entren todos los marcadores (uno o varios). */
-function AjustarVista({ adultos }: { adultos: UbicacionResumenAdulto[] }) {
+function AjustarVista({ adultos, zonas }: {
+  adultos: UbicacionResumenAdulto[]
+  zonas: ZonaSegura[]
+}) {
   const map = useMap()
   // Firma estable: el array cambia de identidad en cada render.
-  const firma = adultos
-    .map((a) => `${a.adulto_id}:${a.latitud},${a.longitud}`)
-    .join('|')
+  const firma = [
+    ...adultos.map((a) => `${a.adulto_id}:${a.latitud},${a.longitud}`),
+    ...zonas.map((z) => `${z.id}:${z.latitud_centro},${z.longitud_centro},${z.radio_metros}`),
+  ].join('|')
 
   useEffect(() => {
     if (!firma) return
     const puntos = adultos.map(
       (a) => [a.latitud, a.longitud] as [number, number],
     )
-    if (puntos.length === 1) {
+    if (puntos.length === 1 && zonas.length === 0) {
       map.setView(puntos[0], 15)
       return
     }
-    map.fitBounds(puntos, { padding: [40, 40] })
-    // firma resume adultos + coordenadas; evita reencuadrar en cada render.
+    const limites = L.latLngBounds(puntos)
+    for (const zona of zonas) {
+      limites.extend(L.latLng(
+        zona.latitud_centro, zona.longitud_centro,
+      ).toBounds(zona.radio_metros * 2))
+    }
+    map.fitBounds(limites, { padding: [40, 40], maxZoom: 15 })
+    // firma resume coordenadas y radios; evita reencuadrar en cada render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firma, map])
 
@@ -165,15 +176,21 @@ function AjustarVista({ adultos }: { adultos: UbicacionResumenAdulto[] }) {
 type MapaAdultosProps = {
   /** Última ubicación por adulto (GET /ubicaciones/ultimas, solo admin). */
   adultos: UbicacionResumenAdulto[]
+  zonasSeguras?: ZonaSegura[]
 }
 
 /**
  * Mapa con TODOS los adultos a la vez: un marcador por adulto con su nombre y
  * la hora del último reporte. La vista se ajusta a los marcadores existentes.
  */
-export function MapaAdultos({ adultos }: MapaAdultosProps) {
+export function MapaAdultos({ adultos, zonasSeguras = [] }: MapaAdultosProps) {
   const validas = adultos.filter((a) =>
     esCoordenadaValida(a.latitud, a.longitud),
+  )
+  const zonasValidas = zonasSeguras.filter((zona) =>
+    zona.activa &&
+    esCoordenadaValida(zona.latitud_centro, zona.longitud_centro) &&
+    Number.isFinite(zona.radio_metros) && zona.radio_metros > 0,
   )
 
   return (
@@ -188,7 +205,21 @@ export function MapaAdultos({ adultos }: MapaAdultosProps) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <AjustarVista adultos={validas} />
+        <AjustarVista adultos={validas} zonas={zonasValidas} />
+        {zonasValidas.map((zona) => (
+          <Circle
+            key={zona.id}
+            center={[zona.latitud_centro, zona.longitud_centro]}
+            radius={zona.radio_metros}
+            pathOptions={{ color: '#2563eb', fillOpacity: 0.1, weight: 2 }}
+          >
+            <Popup>
+              <strong>Zona segura: {zona.nombre}</strong>
+              <br />
+              Radio: {zona.radio_metros} m
+            </Popup>
+          </Circle>
+        ))}
         {validas.map((adulto) => (
           <Marker
             key={adulto.adulto_id}
@@ -207,9 +238,9 @@ export function MapaAdultos({ adultos }: MapaAdultosProps) {
         ))}
       </MapContainer>
 
-      {validas.length === 0 && (
+      {validas.length === 0 && zonasValidas.length === 0 && (
         <div className="absolute inset-0 z-[400] flex items-center justify-center bg-salvia-50/80 px-4 text-center text-sm text-salvia-700">
-          Ningún adulto ha reportado una ubicación válida todavía.
+          No hay ubicaciones ni zonas seguras válidas para mostrar.
         </div>
       )}
     </div>

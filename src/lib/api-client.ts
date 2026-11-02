@@ -16,7 +16,7 @@ import type { components } from '@/types/api'
  * - baseURL y headers
  * - Authorization: Bearer <token>
  * - refresh de token una sola vez (single-flight) ante 401
- * - limpieza de sesión si el refresh falla
+ * - limpieza de sesión solo ante credenciales rechazadas con 401
  */
 
 /** Forma de la respuesta del backend al emitir tokens (auth.service.ts). */
@@ -90,8 +90,15 @@ export async function restaurarSesion(): Promise<void> {
     const tokens = await refreshCompartido(sessionRevision)
     if (useAuthStore.getState().sessionRevision !== sessionRevision) return
     setSesion({ accessToken: tokens.accessToken, usuario: tokens.user })
-  } catch {
-    if (useAuthStore.getState().sessionRevision === sessionRevision) clearSesion()
+  } catch (error) {
+    if (useAuthStore.getState().sessionRevision !== sessionRevision) return
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      clearSesion()
+      return
+    }
+    // Una caída de red o del servidor no demuestra que la cookie sea inválida.
+    // El arranque debe ofrecer reintentar sin convertir el fallo en un logout.
+    throw error
   }
 }
 
@@ -115,7 +122,6 @@ apiClient.interceptors.response.use(
     if (
       status !== 401 ||
       !config ||
-      config.ribaniReintentada ||
       (config.url?.startsWith('/auth/') && config.url !== '/auth/me') ||
       config.url === '/usuarios/perfil/password' ||
       /^\/usuarios\/[^/]+\/2fa\/verify$/.test(config.url ?? '')
@@ -129,28 +135,39 @@ apiClient.interceptors.response.use(
     // Una petición de la sesión anterior no puede renovar ni cerrar la actual.
     if (config.ribaniRevision !== sessionRevision) throw error
 
-    if (!token) {
-      clearSesion()
+    if (!token) throw error
+
+    if (config.ribaniReintentada) {
+      // El servidor rechazó también las credenciales ya renovadas.
+      if (config.headers.get('Authorization') === `Bearer ${token}`) clearSesion()
       throw error
     }
 
+    config.ribaniReintentada = true
+
+    // Un 401 puede llegar cuando otra petición ya renovó el token. Reutilizarlo
+    // evita rotar otra vez la cookie para respuestas tardías del token anterior.
+    if (config.headers.get('Authorization') !== `Bearer ${token}`) {
+      return apiClient(config)
+    }
+
+    let tokens: TokensEmitidos
     try {
       // Single-flight: ante varios 401 concurrentes, se refresca una sola vez.
-      const tokens = await refreshCompartido(sessionRevision)
-      if (useAuthStore.getState().sessionRevision !== sessionRevision) throw error
-
-      setSesion({
-        accessToken: tokens.accessToken,
-        usuario: tokens.user,
-      })
-
-      config.ribaniReintentada = true
-      config.headers.set('Authorization', `Bearer ${tokens.accessToken}`)
-
-      return await apiClient(config)
-    } catch {
-      if (useAuthStore.getState().sessionRevision === sessionRevision) clearSesion()
-      throw error
+      tokens = await refreshCompartido(sessionRevision)
+    } catch (refreshError) {
+      if (
+        useAuthStore.getState().sessionRevision === sessionRevision &&
+        axios.isAxiosError(refreshError) && refreshError.response?.status === 401
+      ) clearSesion()
+      throw refreshError
     }
+
+    if (useAuthStore.getState().sessionRevision !== sessionRevision) throw error
+    setSesion({ accessToken: tokens.accessToken, usuario: tokens.user })
+
+    // Mantener fuera del catch de refresh: errores de negocio, red o cancelación
+    // del reintento no invalidan una sesión que acaba de renovarse correctamente.
+    return apiClient(config)
   },
 )

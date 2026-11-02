@@ -1,3 +1,5 @@
+import { Select } from '@/components/ui/select'
+import { BARRA_FILTROS } from '@/lib/clases-filtros'
 import { useMemo, useState } from 'react'
 
 import { Spinner } from '@/components/ui/spinner'
@@ -59,7 +61,7 @@ export function UbicacionesPage() {
         </div>
       ) : activos.length === 0 ? (
         <div className="rounded-lg border border-salvia-200 bg-white p-10 text-center">
-          <p className="text-sm font-medium text-pino-900">
+          <p className="col-span-full block text-sm font-medium text-pino-900">
             No tienes adultos mayores vinculados
           </p>
           <p className="mt-1 text-sm text-salvia-600">
@@ -70,28 +72,28 @@ export function UbicacionesPage() {
       ) : (
         <>
           {activos.length > 1 && (
-            <div className="flex flex-wrap items-center gap-2">
+            <div className={BARRA_FILTROS}>
               <label
                 htmlFor="selector-adulto"
-                className="text-sm font-medium text-pino-900"
+                className="col-span-full block text-sm font-medium text-pino-900"
               >
-                Adulto:
+                Adulto mayor
               </label>
-              <select
+              <Select
                 id="selector-adulto"
                 value={adultoId}
                 onChange={(evento) => {
                   setSeguir(true)
                   setAdultoSeleccionado(evento.target.value)
                 }}
-                className="w-72 rounded-md border border-salvia-300 bg-white px-3 py-2 text-sm text-pino-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600"
+                className="col-span-full"
               >
                 {activos.map((adulto) => (
                   <option key={adulto.id} value={adulto.id}>
                     {adulto.nombre} {adulto.apellido}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
           )}
 
@@ -113,7 +115,7 @@ export function UbicacionesPage() {
             // normal, no error; el stream actualiza la vista al primer
             // reporte sin recargar.
             <div className="rounded-lg border border-salvia-200 bg-white p-10 text-center">
-              <p className="text-sm font-medium text-pino-900">
+              <p className="col-span-full block text-sm font-medium text-pino-900">
                 Aún no hay una ubicación registrada
               </p>
               <p className="mt-1 text-sm text-salvia-600">

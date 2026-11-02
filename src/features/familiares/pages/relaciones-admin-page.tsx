@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { Select } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { IconoFamiliares } from '@/lib/iconos'
 import {
-  ANCHO_NORMAL,
   BARRA_FILTROS,
   CONTROL_FILTRO,
 } from '@/lib/clases-filtros'
@@ -108,38 +108,39 @@ export function RelacionesAdminPage() {
         <div>
           <label
             htmlFor="filtro-rel-buscar"
-            className="text-xs font-medium text-salvia-600"
+            className="block text-sm font-medium text-salvia-700"
           >
             Buscar
           </label>
           <input
             id="filtro-rel-buscar"
             type="search"
-            placeholder="Nombre o correo del familiar o adulto…"
-            className={`${CONTROL_FILTRO} ${ANCHO_NORMAL}`}
+            placeholder="Nombre o correo…"
+            className={CONTROL_FILTRO}
             value={busqueda}
             onChange={(evento) => setBusqueda(evento.target.value)}
           />
+          <p className="mt-1.5 text-xs leading-5 text-salvia-600">Busca un familiar o un adulto mayor.</p>
         </div>
 
         <div>
           <label
             htmlFor="filtro-rel-estado"
-            className="text-xs font-medium text-salvia-600"
+            className="block text-sm font-medium text-salvia-700"
           >
             Estado
           </label>
-          <select
+          <Select
             id="filtro-rel-estado"
             value={estadoFiltro}
             onChange={(e) => setEstadoFiltro(e.target.value)}
-            className={`${CONTROL_FILTRO} ${ANCHO_NORMAL}`}
+            className="mt-1.5"
           >
             <option value="">Todos</option>
             <option value="ACTIVA">Activa</option>
             <option value="PENDIENTE">Pendiente</option>
             <option value="REVOCADA">Revocada</option>
-          </select>
+          </Select>
         </div>
       </div>
 
@@ -183,7 +184,7 @@ export function RelacionesAdminPage() {
           </p>
           <p className="mt-1 text-sm text-salvia-600">
             {(vinculos.data ?? []).length === 0
-              ? 'Usa «Invitar cuidador» o «Vincular familiar» para crear la primera.'
+              ? 'Usa «Invitar adulto mayor» en Familiares y vínculos para crear la primera relación.'
               : 'Limpia la búsqueda o cambia el filtro de estado.'}
           </p>
         </div>

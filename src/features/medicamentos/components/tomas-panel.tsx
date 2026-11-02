@@ -195,14 +195,14 @@ export function TomasPanel({ medicamentos }: TomasPanelProps) {
       </div>
 
       {/* Filtros */}
-      <div className="flex flex-wrap items-end gap-3 px-4 py-3 sm:px-6">
-        <div className="flex gap-1.5">
+      <div className="space-y-4 border-b border-salvia-200 px-4 py-4 sm:px-6">
+        <div role="group" aria-label="Filtrar tomas por estado" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {estados.map(({ valor, etiqueta }) => (
             <button
               key={valor}
               type="button"
               aria-pressed={filtroEstado === valor}
-              className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+              className={`min-h-11 rounded-lg border px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600 motion-reduce:transition-none ${
                 filtroEstado === valor
                   ? 'border-pino-600 bg-pino-600 text-white'
                   : 'border-salvia-300 bg-white text-pino-900 hover:bg-salvia-100'
@@ -213,33 +213,31 @@ export function TomasPanel({ medicamentos }: TomasPanelProps) {
             </button>
           ))}
         </div>
-        <div className="flex items-end gap-2">
-          <div className="space-y-0.5">
+        <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
+          <div className="min-w-0 space-y-1.5">
             <label
               htmlFor="tomas-desde"
-              className="block text-xs font-medium text-pino-900"
+              className="block text-sm font-medium text-pino-900"
             >
               Desde
             </label>
             <Input
               id="tomas-desde"
               type="date"
-              className="w-40"
               value={desde}
               onChange={(evento) => setDesde(evento.target.value)}
             />
           </div>
-          <div className="space-y-0.5">
+          <div className="min-w-0 space-y-1.5">
             <label
               htmlFor="tomas-hasta"
-              className="block text-xs font-medium text-pino-900"
+              className="block text-sm font-medium text-pino-900"
             >
               Hasta
             </label>
             <Input
               id="tomas-hasta"
               type="date"
-              className="w-40"
               value={hasta}
               onChange={(evento) => setHasta(evento.target.value)}
             />
@@ -248,6 +246,7 @@ export function TomasPanel({ medicamentos }: TomasPanelProps) {
             <Button
               variant="secondary"
               size="sm"
+              className="col-span-full justify-self-end"
               onClick={() => {
                 setDesde('')
                 setHasta('')

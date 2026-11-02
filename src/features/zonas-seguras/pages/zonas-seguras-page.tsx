@@ -1,3 +1,5 @@
+import { Select } from '@/components/ui/select'
+import { BARRA_FILTROS } from '@/lib/clases-filtros'
 import { useMemo, useState } from 'react'
 
 import { Alert } from '@/components/ui/alert'
@@ -109,18 +111,18 @@ export function ZonasSegurasPage() {
       </p>
 
       {(adultos.data?.length ?? 0) > 1 && (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className={BARRA_FILTROS}>
           <label
             htmlFor="filtro-adulto-zonas"
-            className="text-sm font-medium text-pino-900"
+            className="col-span-full block text-sm font-medium text-pino-900"
           >
-            Adulto:
+            Adulto mayor
           </label>
-          <select
+          <Select
             id="filtro-adulto-zonas"
             value={adultoFiltro}
             onChange={(evento) => setAdultoFiltro(evento.target.value)}
-            className="w-72 rounded-md border border-salvia-300 bg-white px-3 py-2 text-sm text-pino-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600"
+            className="col-span-full"
           >
             <option value="">Todos</option>
             {(adultos.data ?? []).map((adulto) => (
@@ -128,7 +130,7 @@ export function ZonasSegurasPage() {
                 {adulto.nombre} {adulto.apellido}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       )}
 
@@ -156,7 +158,7 @@ export function ZonasSegurasPage() {
           </div>
         ) : zonas.data.length === 0 ? (
           <div className="p-10 text-center">
-            <p className="text-sm font-medium text-pino-900">
+            <p className="col-span-full block text-sm font-medium text-pino-900">
               No hay zonas seguras
             </p>
             <p className="mt-1 text-sm text-salvia-600">

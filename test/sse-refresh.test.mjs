@@ -6,6 +6,28 @@ const { useAuthStore } = await import('../src/stores/auth-store.ts')
 const { apiClient } = await import('../src/lib/api-client.ts')
 const { default: axios, AxiosError } = await import('axios')
 const { abrirStreamSse } = await import('../src/lib/sse.ts')
+const { env } = await import('../src/config/env.ts')
+
+test('SSE conserva el prefijo de la API al unir una ruta absoluta de feature', async (t) => {
+  const baseAnterior = env.apiUrl
+  const fetchAnterior = window.fetch
+  env.apiUrl = 'https://ribani.test/api'
+  const usuario = { id: 'a' }
+  useAuthStore.getState().setSesion({ accessToken: 'token-a', usuario })
+  const requests = []
+  window.fetch = (url) => {
+    requests.push(url)
+    return new Promise(() => {})
+  }
+  const close = abrirStreamSse('/ubicaciones/stream?adultoId=adulto')
+  t.after(() => {
+    close()
+    env.apiUrl = baseAnterior
+    window.fetch = fetchAnterior
+    useAuthStore.getState().clearSesion()
+  })
+  assert.equal(requests[0], 'https://ribani.test/api/ubicaciones/stream?adultoId=adulto')
+})
 test('SSE renueva un JWT vencido y reintenta con Authorization actualizado', async (t) => {
   const usuario={id:'a',nombre:'Ana',apellido:'P',email:'a@test.example',telefono:null,emailVerificado:true,twoFactorEnabled:false,rol:{id:1,codigo:'FAMILIAR_ENCARGADO',nombre:'Familiar'},permisos:[]}
   useAuthStore.getState().setSesion({accessToken:'old-token',usuario})

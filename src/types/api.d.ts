@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    "/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AppController_getHello"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/invitaciones/abrir": {
         parameters: {
             query?: never;
@@ -756,6 +772,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/familiares/invitaciones/solicitar-codigo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["InvitacionesFamiliaresController_solicitarCodigo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/familiares/invitaciones/completar": {
         parameters: {
             query?: never;
@@ -1326,6 +1358,8 @@ export interface components {
             user: components["schemas"]["UsuarioSesionDto"];
         };
         IntegracionWhatsappDto: {
+            /** @enum {string} */
+            proveedor: "META_CLOUD_API" | "EVOLUTION_API";
             habilitada: boolean;
             procesador_habilitado: boolean;
             recordatorios_habilitados: boolean;
@@ -1655,7 +1689,16 @@ export interface components {
             esNuevaCuenta: boolean;
             mensaje: string;
         };
+        SolicitarCodigoInvitacionDto: {
+            /** Format: email */
+            email: string;
+        };
+        CodigoInvitacionRespuestaDto: {
+            mensaje: string;
+        };
         CompletarInvitacionFamiliarDto: {
+            /** @description Código de 6 dígitos enviado al correo con POST /familiares/invitaciones/solicitar-codigo. */
+            codigo: string;
             /** Format: email */
             email: string;
             password: string;
@@ -1753,7 +1796,7 @@ export interface components {
             /** Format: uuid */
             dispositivo_id?: string;
             /** @enum {string} */
-            tipo: "SOS" | "OTRA" | "MEDICAMENTO" | "CAIDA" | "ZONA_SEGURA" | "INACTIVIDAD" | "SISTEMA";
+            tipo: "SOS" | "MEDICAMENTO" | "OTRA" | "CAIDA" | "ZONA_SEGURA" | "INACTIVIDAD" | "SISTEMA";
             /** @enum {string} */
             severidad?: "BAJA" | "MEDIA" | "ALTA" | "CRITICA";
             titulo: string;
@@ -1874,6 +1917,25 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    AppController_getHello: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
     InvitacionesAbrirController_abrir: {
         parameters: {
             query?: {
@@ -3400,6 +3462,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InvitacionFamiliarRespuestaDto"];
+                };
+            };
+        };
+    };
+    InvitacionesFamiliaresController_solicitarCodigo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SolicitarCodigoInvitacionDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CodigoInvitacionRespuestaDto"];
                 };
             };
         };

@@ -1,12 +1,11 @@
 import { useMemo, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { Select } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { Td, Table, Th } from '@/components/ui/table'
 import { IconoMedicamentos } from '@/lib/iconos'
 import {
-  ANCHO_LARGO,
-  ANCHO_NORMAL,
   BARRA_FILTROS,
   CONTROL_FILTRO,
 } from '@/lib/clases-filtros'
@@ -77,15 +76,15 @@ export function MedicamentosAdminPage() {
         <div>
           <label
             htmlFor="filtro-med-adulto"
-            className="text-xs font-medium text-salvia-600"
+            className="block text-sm font-medium text-salvia-700"
           >
             Adulto
           </label>
-          <select
+          <Select
             id="filtro-med-adulto"
             value={adultoSel}
             onChange={(e) => setAdultoSel(e.target.value)}
-            className={`${CONTROL_FILTRO} ${ANCHO_LARGO}`}
+            className="mt-1.5"
           >
             <option value="">Todos</option>
             {(adultos.data ?? []).map((adulto) => (
@@ -93,13 +92,13 @@ export function MedicamentosAdminPage() {
                 {adulto.nombre} {adulto.apellido}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
 
         <div>
           <label
             htmlFor="filtro-med-buscar"
-            className="text-xs font-medium text-salvia-600"
+            className="block text-sm font-medium text-salvia-700"
           >
             Buscar
           </label>
@@ -107,13 +106,13 @@ export function MedicamentosAdminPage() {
             id="filtro-med-buscar"
             type="search"
             placeholder="Nombre o instrucciones…"
-            className={`${CONTROL_FILTRO} ${ANCHO_NORMAL}`}
+            className={CONTROL_FILTRO}
             value={busqueda}
             onChange={(evento) => setBusqueda(evento.target.value)}
           />
         </div>
 
-        <label className="flex items-center gap-2 text-sm text-salvia-700">
+        <label className="flex min-h-11 items-center gap-3 self-end rounded-lg border border-salvia-200 bg-salvia-50 px-3 py-2.5 text-sm text-salvia-700">
           <input
             type="checkbox"
             className="size-4 rounded border-salvia-300 accent-pino-600"

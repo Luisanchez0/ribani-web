@@ -6,6 +6,11 @@ test('desarrollo conserva HTTP localhost', () => {
   assert.equal(resolveApiUrl(undefined, false), 'http://localhost:3000')
 })
 
+test('normaliza las barras finales sin perder el prefijo de la API', () => {
+  assert.equal(resolveApiUrl(' http://localhost:3000/ ', false), 'http://localhost:3000')
+  assert.equal(resolveApiUrl('https://ribani.test/api///', true), 'https://ribani.test/api')
+})
+
 test('producción exige una API HTTPS configurada', () => {
   assert.throws(() => resolveApiUrl(undefined, true), /HTTPS/)
   assert.throws(() => resolveApiUrl('http://ribani-api.onrender.com', true), /HTTPS/)

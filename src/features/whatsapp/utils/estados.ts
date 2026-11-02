@@ -1,4 +1,33 @@
 import type { ResumenWhatsapp } from '../api/whatsapp.api'
+import type { components } from '@/types/api'
+
+type Mensaje = components['schemas']['NotificacionWhatsappDto']
+
+function normalizarTexto(valor: string) {
+  return valor
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('es')
+    .trim()
+}
+
+/** Filtros locales sobre los últimos mensajes cargados; no alteran la caché. */
+export function filtrarHistorialWhatsapp<T extends Pick<Mensaje, 'destinatario_id' | 'estado' | 'tipo'>>(
+  mensajes: T[],
+  busqueda: string,
+  estado: string,
+  nombres: Map<string, string>,
+): T[] {
+  const texto = normalizarTexto(busqueda)
+  return mensajes.filter(
+    (mensaje) =>
+      (!estado || mensaje.estado === estado) &&
+      (!texto ||
+        normalizarTexto(
+          `${nombres.get(mensaje.destinatario_id) ?? ''} ${mensaje.tipo}`,
+        ).includes(texto)),
+  )
+}
 
 export function etiquetaWhatsapp(estado: string): string {
   const etiquetas: Record<string, string> = {

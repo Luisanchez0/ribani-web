@@ -1,16 +1,14 @@
 import { useMemo, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { Select } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { Td, Table, Th } from '@/components/ui/table'
 import { IconoAlertas } from '@/lib/iconos'
 import {
-  ANCHO_NORMAL,
   BARRA_FILTROS,
-  CONTROL_FILTRO,
 } from '@/lib/clases-filtros'
 import { formatFechaHora } from '@/lib/format'
-import { useAdultos } from '@/features/usuarios'
 import { useMisAdultos } from '@/features/familiares'
 import {
   useResumenWhatsapp,
@@ -28,7 +26,6 @@ import {
 import { useAlertasStream } from '../hooks/use-alertas-stream'
 
 export function AlertasPage() {
-  const adultos = useAdultos()
   const misAdultos = useMisAdultos()
   const whatsapp = useResumenWhatsapp()
   const actualizar = useActualizarAlerta()
@@ -62,11 +59,11 @@ export function AlertasPage() {
 
   const nombreAdulto = useMemo(() => {
     const mapa = new Map<string, string>()
-    for (const a of adultos.data ?? []) {
+    for (const a of misAdultos.data ?? []) {
       mapa.set(a.id, `${a.nombre} ${a.apellido}`)
     }
     return mapa
-  }, [adultos.data])
+  }, [misAdultos.data])
 
   const visibles = useMemo(
     () =>
@@ -138,22 +135,22 @@ export function AlertasPage() {
         <div>
           <label
             htmlFor="filtro-alerta-estado-panel"
-            className="text-xs font-medium text-salvia-600"
+            className="block text-sm font-medium text-salvia-700"
           >
             Estado
           </label>
-          <select
+          <Select
             id="filtro-alerta-estado-panel"
             value={estadoFiltro}
             onChange={(e) => setEstadoFiltro(e.target.value)}
-            className={`${CONTROL_FILTRO} ${ANCHO_NORMAL}`}
+            className="mt-1.5"
           >
             <option value="">Todos</option>
             <option value="ABIERTA">Abierta</option>
             <option value="EN_ATENCION">En atención</option>
             <option value="RESUELTA">Resuelta</option>
             <option value="CANCELADA">Cancelada</option>
-          </select>
+          </Select>
         </div>
       </div>
 

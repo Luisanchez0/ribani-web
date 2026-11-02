@@ -1,12 +1,11 @@
 import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { Select } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { Td, Table, Th } from '@/components/ui/table'
 import { IconoAuditoria } from '@/lib/iconos'
 import {
-  ANCHO_CORTO,
-  ANCHO_NORMAL,
   BARRA_FILTROS,
   CONTROL_FILTRO,
 } from '@/lib/clases-filtros'
@@ -126,19 +125,19 @@ export function AuditoriaPage() {
 
       {/* Filtros (query params reales del backend) */}
       <div className={BARRA_FILTROS}>
-        <div className="flex flex-wrap items-end gap-3">
+        <div className="contents">
           <div>
             <label
               htmlFor="filtro-entidad"
-              className="text-xs font-medium text-salvia-600"
+              className="block text-sm font-medium text-salvia-700"
             >
               Entidad
             </label>
-            <select
+            <Select
               id="filtro-entidad"
               value={entidad}
               onChange={(e) => setEntidad(e.target.value)}
-              className={`${CONTROL_FILTRO} ${ANCHO_NORMAL}`}
+              className="mt-1.5"
             >
               <option value="">Todas</option>
               {[...entidades].map((e) => (
@@ -146,21 +145,21 @@ export function AuditoriaPage() {
                   {e}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
           <div>
             <label
               htmlFor="filtro-accion"
-              className="text-xs font-medium text-salvia-600"
+              className="block text-sm font-medium text-salvia-700"
             >
               Acción
             </label>
-            <select
+            <Select
               id="filtro-accion"
               value={accion}
               onChange={(e) => setAccion(e.target.value)}
-              className={`${CONTROL_FILTRO} ${ANCHO_NORMAL}`}
+              className="mt-1.5"
             >
               <option value="">Todas</option>
               {[...acciones].map((a) => (
@@ -168,13 +167,13 @@ export function AuditoriaPage() {
                   {a}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
           <div>
             <label
               htmlFor="filtro-actor"
-              className="text-xs font-medium text-salvia-600"
+              className="block text-sm font-medium text-salvia-700"
             >
               Actor (UUID)
             </label>
@@ -184,15 +183,15 @@ export function AuditoriaPage() {
               placeholder="ID del usuario…"
               value={actorEmail}
               onChange={(e) => setActorEmail(e.target.value)}
-              className={`${CONTROL_FILTRO} ${ANCHO_NORMAL}`}
+              className={CONTROL_FILTRO}
             />
           </div>
 
-          <div className="flex gap-3">
+          <div className="contents">
             <div>
               <label
                 htmlFor="filtro-desde"
-                className="text-xs font-medium text-salvia-600"
+                className="block text-sm font-medium text-salvia-700"
               >
                 Desde
               </label>
@@ -201,13 +200,13 @@ export function AuditoriaPage() {
                 type="date"
                 value={desde}
                 onChange={(e) => setDesde(e.target.value)}
-                className={`${CONTROL_FILTRO} ${ANCHO_CORTO}`}
+                className={CONTROL_FILTRO}
               />
             </div>
             <div>
               <label
                 htmlFor="filtro-hasta"
-                className="text-xs font-medium text-salvia-600"
+                className="block text-sm font-medium text-salvia-700"
               >
                 Hasta
               </label>
@@ -216,14 +215,14 @@ export function AuditoriaPage() {
                 type="date"
                 value={hasta}
                 onChange={(e) => setHasta(e.target.value)}
-                className={`${CONTROL_FILTRO} ${ANCHO_CORTO}`}
+                className={CONTROL_FILTRO}
               />
             </div>
           </div>
         </div>
 
         {filtrosActivos && (
-          <div className="mt-3 flex justify-end">
+          <div className="col-span-full flex justify-end">
             <Button variant="secondary" size="sm" onClick={limpiar}>
               Limpiar filtros
             </Button>

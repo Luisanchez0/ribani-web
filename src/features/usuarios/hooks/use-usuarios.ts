@@ -11,10 +11,11 @@ export const clavesUsuarios = {
 }
 
 /** GET /usuarios — lista (opcionalmente filtrada) de usuarios. */
-export function useUsuarios(filtros?: FiltrosUsuarios) {
+export function useUsuarios(filtros?: FiltrosUsuarios, enabled = true) {
   return useQuery({
     queryKey: clavesUsuarios.lista(filtros),
     queryFn: () => usuariosApi.listar(filtros),
+    enabled,
   })
 }
 

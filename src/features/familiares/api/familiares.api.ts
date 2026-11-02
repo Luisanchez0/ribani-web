@@ -26,7 +26,7 @@ import type {
  * - GET    /familiares/{id}
  * - PATCH  /familiares/{id}
  * - DELETE /familiares/{id}
- * - POST   /familiares/invitaciones             (invitar cuidador)
+ * - POST   /familiares/invitaciones             (invitar adulto mayor)
  * - POST   /familiares/invitaciones/completar   (completar registro desde invitación)
  * - POST   /familiares/invitaciones/{id}/aceptar
  * - POST   /familiares/invitaciones/{id}/rechazar

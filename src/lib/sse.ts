@@ -45,11 +45,9 @@ export function abrirStreamSse(
     unsubscribe()
   }
 
-  // Diferencia con axios (api-client normaliza la unión baseURL+url): con
-  // fetch nativo, apiUrl='http://host:3000/' + path='/x' produce dobles
-  // slashes y el backend (rutas de raíz) responde 404. new URL(path, base)
-  // resuelve '/x' relativo a la base sin duplicar la barra.
-  const url = new URL(path, env.apiUrl.endsWith('/') ? env.apiUrl : `${env.apiUrl}/`)
+  // La base ya está normalizada; tratar el path como relativo conserva también
+  // prefijos de despliegue como /api, igual que el cliente HTTP.
+  const url = new URL(path.replace(/^\/+/, ''), `${env.apiUrl}/`)
   const transport = window.fetch.bind(window)
 
   void fetchEventSource(url.toString(), {

@@ -1,14 +1,12 @@
 import { useMemo, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { Select } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { Td, Table, Th } from '@/components/ui/table'
 import { IconoAlertas } from '@/lib/iconos'
 import {
-  ANCHO_LARGO,
-  ANCHO_NORMAL,
   BARRA_FILTROS,
-  CONTROL_FILTRO,
 } from '@/lib/clases-filtros'
 import { formatFechaHora } from '@/lib/format'
 import { useAdultos } from '@/features/usuarios'
@@ -70,15 +68,15 @@ export function AlertasAdminPage() {
         <div>
           <label
             htmlFor="filtro-alerta-adulto"
-            className="text-xs font-medium text-salvia-600"
+            className="block text-sm font-medium text-salvia-700"
           >
             Adulto
           </label>
-          <select
+          <Select
             id="filtro-alerta-adulto"
             value={adultoFiltro}
             onChange={(e) => setAdultoFiltro(e.target.value)}
-            className={`${CONTROL_FILTRO} ${ANCHO_LARGO}`}
+            className="mt-1.5"
           >
             <option value="">Todos</option>
             {(adultos.data ?? []).map((adulto) => (
@@ -86,28 +84,28 @@ export function AlertasAdminPage() {
                 {adulto.nombre} {adulto.apellido}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
 
         <div>
           <label
             htmlFor="filtro-alerta-estado"
-            className="text-xs font-medium text-salvia-600"
+            className="block text-sm font-medium text-salvia-700"
           >
             Estado
           </label>
-          <select
+          <Select
             id="filtro-alerta-estado"
             value={estadoFiltro}
             onChange={(e) => setEstadoFiltro(e.target.value)}
-            className={`${CONTROL_FILTRO} ${ANCHO_NORMAL}`}
+            className="mt-1.5"
           >
             <option value="">Todos</option>
             <option value="ABIERTA">Abierta</option>
             <option value="EN_ATENCION">En atención</option>
             <option value="RESUELTA">Resuelta</option>
             <option value="CANCELADA">Cancelada</option>
-          </select>
+          </Select>
         </div>
       </div>
 

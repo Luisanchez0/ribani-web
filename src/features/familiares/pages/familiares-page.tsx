@@ -95,7 +95,7 @@ function TablaRelacionesAdmin({
             No hay relaciones registradas
           </p>
           <p className="mt-1 text-sm text-salvia-600">
-            Usa «Invitar cuidador» o «Vincular familiar» para crear la primera
+            Usa «Invitar adulto mayor» para crear la primera
             relación entre un familiar encargado y un adulto mayor.
           </p>
         </div>
@@ -292,7 +292,7 @@ export function FamiliaresPage() {
           </h1>
 
           <Button onClick={() => setModalInvitarAbierto(true)}>
-            Invitar cuidador
+            Invitar adulto mayor
           </Button>
         </div>
 
@@ -363,12 +363,13 @@ export function FamiliaresPage() {
         </h1>
 
         <Button onClick={() => setModalInvitarAbierto(true)}>
-          Invitar cuidador
+          Invitar adulto mayor
         </Button>
       </div>
-
-
-
+      <p className="max-w-2xl text-sm/6 text-salvia-700">
+        Invita al adulto mayor por correo para vincularlo contigo como cuidador.
+        El adulto debe aceptar la invitación para activar tu acceso.
+      </p>
       {/* Invitaciones pendientes (GET /familiares/invitaciones/pendientes) */}
       {!invitaciones.isPending &&
         !invitaciones.isError &&
@@ -462,8 +463,8 @@ export function FamiliaresPage() {
               Todavía no acompañas a nadie
             </p>
             <p className="mt-1 text-sm text-salvia-600">
-              Cuando la familia de un adulto mayor acepte invitarte como
-              cuidador, su persona aparecerá aquí.
+              Usa «Invitar adulto mayor» para enviarle una invitación.
+              Podrás ver el vínculo pendiente y su acceso se activará cuando acepte.
             </p>
           </div>
         ) : (
@@ -553,11 +554,11 @@ export function FamiliaresPage() {
       <div className="rounded-lg border border-salvia-200 bg-white shadow-sm">
         <div className="border-b border-salvia-100 px-4 py-3">
           <h2 className="font-display text-base font-semibold text-pino-900">
-            Otros cuidadores de tu adulto
+            Familiares vinculados a tu cuenta
           </h2>
           <p className="mt-0.5 text-xs text-salvia-600">
-            Familiares que también tienen acceso a la información del adulto
-            mayor con el que tienes vínculo.
+            Si tu cuenta es de adulto mayor, aquí aparecen los cuidadores
+            vinculados a ti.
           </p>
         </div>
 
@@ -585,11 +586,11 @@ export function FamiliaresPage() {
         ) : familiares.data.length === 0 ? (
           <div className="p-8 text-center">
             <p className="text-sm font-medium text-pino-900">
-              Eres el único cuidador con acceso
+              No hay familiares vinculados a tu cuenta
             </p>
             <p className="mt-1 text-sm text-salvia-600">
-              Usa «Invitar cuidador» para que otro familiar pueda acompañar el
-              cuidado de tu adulto mayor.
+              Los adultos que cuidas aparecen en «Adultos que cuidas».
+              Un administrador puede vincular varios cuidadores al mismo adulto mayor.
             </p>
           </div>
         ) : (

@@ -88,7 +88,7 @@ test('restaura la sesión al recargar usando cookie y sin exponer un refresh tok
 })
 
 test('un arranque sin cookie termina sin sesión y sin errores sin manejar', async () => {
-  mock.method(axios, 'post', async () => { throw new Error('Sin cookie') })
+  mock.method(axios, 'post', async () => { throw errorHttp(401) })
   await restaurarSesion()
   assert.equal(useAuthStore.getState().token, null)
 })
@@ -198,7 +198,7 @@ test('un refresh rechazado elimina credenciales y caché privada', async () => {
   useAuthStore.getState().setSesion(sesion())
   queryClient.setQueryData(['privado'], 'dato-privado')
   apiClient.defaults.adapter = rechazarCon401
-  mock.method(axios, 'post', async () => { throw new Error('Refresh revocado') })
+  mock.method(axios, 'post', async () => { throw errorHttp(401) })
   await assert.rejects(apiClient.get('/usuarios'))
   assert.equal(useAuthStore.getState().token, null)
   assert.equal(queryClient.getQueryData(['privado']), undefined)
@@ -351,4 +351,117 @@ test('salir o cambiar de cuenta aborta el SSE y el token solo viaja en headers',
   useAuthStore.getState().setSesion(sesion('usuario-b', 'token-b'))
   assert.equal(peticiones[1].signal.aborted, true)
   cerrarOtra()
+})
+
+function errorHttp(status, config) {
+  return new AxiosError('Error HTTP', 'ERR_BAD_RESPONSE', config, undefined, {
+    status, statusText: 'Error', data: {}, headers: {}, config,
+  })
+}
+
+test('refresh y logout pendiente usan exactamente una barra con la URL normalizada', async () => {
+  const request = mock.method(axios, 'post', async () => {
+    const restored = sesion()
+    return { data: { accessToken: restored.accessToken, user: restored.usuario } }
+  })
+  await restaurarSesion()
+  assert.equal(request.mock.calls[0].arguments[0], 'http://localhost:3000/auth/web/refresh')
+  useAuthStore.getState().solicitarCierreSesion()
+  await restaurarSesion()
+  assert.equal(request.mock.calls[1].arguments[0], 'http://localhost:3000/auth/web/logout')
+})
+
+test('un fallo temporal de refresh conserva credenciales y caché privada', async () => {
+  const fallos = [403, 404, 429, 500, 503].map((status) => errorHttp(status))
+  fallos.push(new AxiosError('Sin red', 'ERR_NETWORK'), new AxiosError('Tiempo agotado', 'ECONNABORTED'))
+  for (const fallo of fallos) {
+    useAuthStore.getState().setSesion(sesion())
+    queryClient.setQueryData(['privado'], 'dato-privado')
+    apiClient.defaults.adapter = rechazarCon401
+    mock.method(axios, 'post', async () => { throw fallo })
+    await assert.rejects(apiClient.get('/usuarios'))
+    assert.equal(useAuthStore.getState().token, 'token-a', fallo.message)
+    assert.equal(queryClient.getQueryData(['privado']), 'dato-privado')
+    mock.restoreAll()
+  }
+})
+
+test('el arranque distingue el error temporal de una cookie inválida y permite reintentar', async () => {
+  const revision = useAuthStore.getState().sessionRevision
+  let disponible = false
+  mock.method(axios, 'post', async () => {
+    if (!disponible) throw errorHttp(503)
+    const restored = sesion()
+    return { data: { accessToken: restored.accessToken, user: restored.usuario } }
+  })
+  await assert.rejects(restaurarSesion())
+  assert.equal(useAuthStore.getState().sessionRevision, revision)
+  assert.equal(useAuthStore.getState().logoutPendiente, false)
+  disponible = true
+  await restaurarSesion()
+  assert.equal(useAuthStore.getState().token, 'token-a')
+})
+
+test('un refresh temporal durante la restauración tampoco borra una sesión en memoria', async () => {
+  useAuthStore.getState().setSesion(sesion())
+  mock.method(axios, 'post', async () => { throw errorHttp(500) })
+  await assert.rejects(restaurarSesion())
+  assert.equal(useAuthStore.getState().token, 'token-a')
+})
+
+test('un 500 del reintento de negocio conserva la sesión renovada', async () => {
+  useAuthStore.getState().setSesion(sesion())
+  const renewed = sesion('usuario-a', 'renovado')
+  mock.method(axios, 'post', async () => ({ data: { accessToken: renewed.accessToken, user: renewed.usuario } }))
+  apiClient.defaults.adapter = async (config) => {
+    if (config.headers.get('Authorization') === 'Bearer token-a') return rechazarCon401(config)
+    throw errorHttp(500, config)
+  }
+  await assert.rejects(apiClient.patch('/usuarios/perfil', { nombre: 'Ana' }), (error) => error.response?.status === 500)
+  assert.equal(useAuthStore.getState().token, 'renovado')
+})
+
+test('cancelar una operación mientras renueva el token no cierra sesión', async () => {
+  useAuthStore.getState().setSesion(sesion())
+  const controller = new AbortController()
+  const renewed = sesion('usuario-a', 'renovado')
+  mock.method(axios, 'post', async () => {
+    controller.abort()
+    return { data: { accessToken: renewed.accessToken, user: renewed.usuario } }
+  })
+  apiClient.defaults.adapter = rechazarCon401
+  await assert.rejects(apiClient.get('/usuarios', { signal: controller.signal }), (error) => axios.isCancel(error))
+  assert.equal(useAuthStore.getState().token, 'renovado')
+})
+
+test('un segundo 401 con el token renovado termina la sesión sin otro refresh', async () => {
+  useAuthStore.getState().setSesion(sesion())
+  const renewed = sesion('usuario-a', 'renovado')
+  const refresh = mock.method(axios, 'post', async () => ({ data: { accessToken: renewed.accessToken, user: renewed.usuario } }))
+  apiClient.defaults.adapter = rechazarCon401
+  await assert.rejects(apiClient.get('/usuarios'))
+  assert.equal(useAuthStore.getState().token, null)
+  assert.equal(refresh.mock.callCount(), 1)
+})
+
+test('un 401 tardío del token anterior reutiliza el renovado sin rotar otra cookie', async () => {
+  useAuthStore.getState().setSesion(sesion())
+  let rechazarTardia
+  const renewed = sesion('usuario-a', 'renovado')
+  const refresh = mock.method(axios, 'post', async () => ({ data: { accessToken: renewed.accessToken, user: renewed.usuario } }))
+  apiClient.defaults.adapter = async (config) => {
+    if (config.headers.get('Authorization') === 'Bearer renovado') {
+      return { data: 'ok', status: 200, headers: {}, config }
+    }
+    if (config.url === '/tardia') {
+      return new Promise((_, reject) => { rechazarTardia = () => reject(errorHttp(401, config)) })
+    }
+    return rechazarCon401(config)
+  }
+  const tardia = apiClient.get('/tardia')
+  await apiClient.get('/usuarios')
+  rechazarTardia()
+  await tardia
+  assert.equal(refresh.mock.callCount(), 1)
+  assert.equal(useAuthStore.getState().token, 'renovado')
 })
