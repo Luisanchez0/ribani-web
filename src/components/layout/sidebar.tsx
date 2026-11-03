@@ -92,7 +92,7 @@ export function Sidebar({ abierto, onCerrar }: SidebarProps) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 shrink-0 bg-pino-900 transition-transform lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 w-64 shrink-0 bg-pino-900 transition-transform lg:sticky lg:top-0 lg:h-dvh lg:translate-x-0 ${
           abierto ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

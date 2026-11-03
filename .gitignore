@@ -19,6 +19,9 @@ dist-ssr
 
 # Editor directories and files
 .vscode/*
+.agents/*
+.claude/*
+skills/*
 !.vscode/extensions.json
 .idea
 .DS_Store
@@ -28,8 +31,11 @@ dist-ssr
 *.sln
 *.sw?
 
+<<<<<<< Updated upstream
 #directories
 .agents/
 .claude/
 .freebuff/
 skills/
+=======
+>>>>>>> Stashed changes
