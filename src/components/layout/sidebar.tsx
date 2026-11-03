@@ -52,7 +52,7 @@ const itemsPanelFamiliar: ItemNavegacion[] = [
 /** Sección Administración del sistema (solo ADMINISTRADOR). */
 const itemsAdmin: ItemNavegacion[] = [
   { to: '/admin/whatsapp', etiqueta: 'WhatsApp', Icono: IconoContactos },
-  { to: '/admin', etiqueta: 'Usuarios', Icono: IconoUsuarios, end: true },
+  { to: '/admin/usuarios', etiqueta: 'Usuarios', Icono: IconoUsuarios },
   { to: '/admin/ubicaciones', etiqueta: 'Ubicaciones', Icono: IconoUbicaciones },
   { to: '/admin/relaciones', etiqueta: 'Relaciones familiares', Icono: IconoFamiliares },
   { to: '/admin/alertas', etiqueta: 'Alertas', Icono: IconoAlertas },
@@ -62,11 +62,16 @@ const itemsAdmin: ItemNavegacion[] = [
   { to: '/admin/auditoria', etiqueta: 'Auditoría', Icono: IconoAuditoria },
 ]
 
+/**
+ * El apartado activo se distingue por fondo claro, texto oscuro en negrita
+ * y una barra lateral (no depende solo del color). NavLink añade además
+ * aria-current="page" para lectores de pantalla.
+ */
 const claseItem = ({ isActive }: { isActive: boolean }) =>
-  `flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+  `relative flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-300 ${
     isActive
-      ? 'bg-pino-100/10 text-white ring-1 ring-pino-300/40'
-      : 'text-pino-200 hover:bg-pino-800 hover:text-white'
+      ? 'bg-pino-50 font-semibold text-pino-900 shadow-sm before:absolute before:inset-y-1.5 before:-left-4 before:w-1 before:rounded-r before:bg-pino-300'
+      : 'font-medium text-pino-200 hover:bg-pino-800 hover:text-white'
   }`
 
 type SidebarProps = {

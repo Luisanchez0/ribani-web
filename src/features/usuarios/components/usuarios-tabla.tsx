@@ -32,6 +32,8 @@ function BadgeEstado({ activo, className = '', ...props }: BadgeProps) {
 
 type UsuariosTablaProps = {
   usuarios: UsuarioLista[]
+  /** rol_id → nombre legible, del catálogo GET /roles. */
+  nombreRol: Map<number, string>
   ocupados: Set<string>
   onEditar: (usuario: UsuarioLista) => void
   onAlternarActivo: (usuario: UsuarioLista) => void
@@ -40,6 +42,7 @@ type UsuariosTablaProps = {
 
 export function UsuariosTabla({
   usuarios,
+  nombreRol,
   ocupados,
   onEditar,
   onAlternarActivo,
@@ -72,7 +75,7 @@ export function UsuariosTabla({
               </Td>
               <Td>{usuario.email}</Td>
               <Td>{usuario.telefono ?? '—'}</Td>
-              <Td>{usuario.rol_id}</Td>
+              <Td>{nombreRol.get(usuario.rol_id) ?? '—'}</Td>
               <Td>
                 {usuario.two_factor_enabled ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-pino-100 px-2 py-0.5 text-xs font-medium text-pino-800">
