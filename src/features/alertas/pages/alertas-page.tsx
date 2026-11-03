@@ -23,7 +23,8 @@ import {
   type Alerta,
   type TransicionAlerta,
 } from '../api/alertas.api'
-import { useAlertasStream } from '../hooks/use-alertas-stream'
+import { BotonAvisosNavegador } from '../components/boton-avisos-navegador'
+import { useAlertasEnVivo } from '../hooks/use-alertas-en-vivo'
 
 export function AlertasPage() {
   const misAdultos = useMisAdultos()
@@ -44,18 +45,10 @@ export function AlertasPage() {
 
   const alertas = useAlertas(params)
 
-  // Tiempo real del panel: un stream SSE por adulto vinculado ACTIVA.
-  // Cada creación o cambio de estado (caída/SOS desde la app, cierre
-  // automático de zona segura, etc.) invalida ['alertas'] y la tabla
-  // relea GET /alertas sin recargar la página.
-  const idsAdultos = useMemo(
-    () =>
-      (misAdultos.data ?? [])
-        .filter((adulto) => adulto.estado === 'ACTIVA')
-        .map((adulto) => adulto.id),
-    [misAdultos.data],
-  )
-  const stream = useAlertasStream(idsAdultos)
+  // Tiempo real: el Shell (AvisosAlertasProvider) mantiene un stream SSE
+  // por adulto vinculado ACTIVA; cada creación o cambio de estado invalida
+  // ['alertas'] y esta tabla relee GET /alertas sin recargar la página.
+  const stream = { estado: useAlertasEnVivo() }
 
   const nombreAdulto = useMemo(() => {
     const mapa = new Map<string, string>()
@@ -123,6 +116,8 @@ export function AlertasPage() {
           Mostrar también resueltas
         </label>
       </div>
+
+      <BotonAvisosNavegador />
 
       <p className="max-w-2xl text-sm/6 text-salvia-700">
         Las alertas críticas se agregan a la cola de WhatsApp para contactos y

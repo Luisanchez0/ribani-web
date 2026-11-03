@@ -5,7 +5,19 @@ import { useQueryClient } from '@tanstack/react-query'
 import { abrirStreamSse } from '@/lib/sse'
 import { useAuthStore } from '@/stores/auth-store'
 
-import { clavesAlertas } from '../api/alertas.api'
+import { clavesAlertas, type Alerta } from '../api/alertas.api'
+
+/** Alerta vigente recibida por primera vez (creada en vivo o mientras no había conexión). */
+export type OnAlertaNueva = (alerta: Alerta) => void
+
+function esAlerta(valor: unknown): valor is Alerta {
+  return (
+    typeof valor === 'object' &&
+    valor !== null &&
+    typeof (valor as { id?: unknown }).id === 'string' &&
+    typeof (valor as { estado?: unknown }).estado === 'string'
+  )
+}
 
 type EstadoConexion = 'conectando' | 'conectado' | 'error'
 
@@ -51,8 +63,16 @@ function derivarEstado(
  *   deriva en el render, así el efecto nunca llama a setState de forma
  *   sincrónica (react-hooks/set-state-in-effect)
  */
-export function useAlertasStream(adultoIds: string[]) {
+export function useAlertasStream(
+  adultoIds: string[],
+  onAlertaNueva?: OnAlertaNueva,
+) {
   const queryClient = useQueryClient()
+  // Ref al callback más reciente: cambiarlo no reabre las conexiones.
+  const onAlertaNuevaRef = useRef(onAlertaNueva)
+  useEffect(() => {
+    onAlertaNuevaRef.current = onAlertaNueva
+  }, [onAlertaNueva])
   const token = useAuthStore((state) => state.token)
   const sessionRevision = useAuthStore((state) => state.sessionRevision)
   // Clave estable para no reabrir conexiones en cada render.
@@ -68,6 +88,27 @@ export function useAlertasStream(adultoIds: string[]) {
     }
 
     let abortado = false
+
+    // Alertas ya conocidas: la carga inicial de cada adulto (array con sus
+    // abiertas) solo siembra este conjunto, para no avisar de nuevo de lo
+    // que ya existía al iniciar sesión. Después, toda alerta ABIERTA con id
+    // desconocido es nueva: llegó en vivo o se creó durante una reconexión.
+    const conocidas = new Set<string>()
+    const sembrados = new Set<string>()
+
+    const procesarPayload = (adultoId: string, payload: unknown) => {
+      const lista = Array.isArray(payload) ? payload : [payload]
+      const esCargaInicial = Array.isArray(payload) && !sembrados.has(adultoId)
+      if (Array.isArray(payload)) sembrados.add(adultoId)
+
+      for (const item of lista) {
+        if (!esAlerta(item) || conocidas.has(item.id)) continue
+        conocidas.add(item.id)
+        if (!esCargaInicial && item.estado === 'ABIERTA') {
+          onAlertaNuevaRef.current?.(item)
+        }
+      }
+    }
 
     const marcarEstado = (adultoId: string, estado: EstadoConexion) => {
       if (abortado) return
@@ -99,12 +140,14 @@ export function useAlertasStream(adultoIds: string[]) {
               if (abortado) return
               // El backend emite type: 'alerta' (array inicial u objeto).
               if (evento.event && evento.event !== 'alerta') return
+              let payload: unknown
               try {
-                JSON.parse(evento.data)
+                payload = JSON.parse(evento.data)
               } catch {
                 return // payload inválido: ignorar sin romper la conexión
               }
               marcarEstado(adultoId, 'conectado')
+              procesarPayload(adultoId, payload)
               invalidarAlertas()
             },
             onError: () => {
