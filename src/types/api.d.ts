@@ -740,6 +740,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/familiares/adultos/{adultoId}/familiares": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["FamiliaresController_familiaresDeAdulto"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/familiares/{id}": {
         parameters: {
             query?: never;
@@ -1659,6 +1675,22 @@ export interface components {
             puede_ver_ubicacion: boolean;
             puede_gestionar_medicamentos: boolean;
             estado: string;
+        };
+        FamiliarDeAdultoRespuestaDto: {
+            vinculo_id: string;
+            familiar_id: string;
+            nombre: string;
+            apellido: string;
+            email: string;
+            parentesco?: string | null;
+            es_contacto_principal: boolean;
+            puede_ver_ubicacion: boolean;
+            puede_gestionar_medicamentos: boolean;
+            /** @enum {string} */
+            estado: "PENDIENTE" | "ACTIVA";
+            /** Format: date-time */
+            created_at: string;
+            es_tu_vinculo: boolean;
         };
         UpdateFamiliarDto: {
             parentesco?: string;
@@ -3413,6 +3445,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["VinculoFamiliarRespuestaDto"][];
+                };
+            };
+        };
+    };
+    FamiliaresController_familiaresDeAdulto: {
+        parameters: {
+            query?: {
+                limite?: number;
+            };
+            header?: never;
+            path: {
+                adultoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FamiliarDeAdultoRespuestaDto"][];
                 };
             };
         };

@@ -7,6 +7,7 @@ import { Td, Table, Th } from '@/components/ui/table'
 import { formatFecha } from '@/lib/format'
 import { InvitarFamiliarModal } from '../components/invitar-familiar-modal'
 import { InvitarCofamiliarModal } from '../components/invitar-cofamiliar-modal'
+import { FamiliaresAdultoModal } from '../components/familiares-adulto-modal'
 import { DosPasosAdultoModal } from '../components/dos-pasos-adulto-modal'
 import {
   useAceptarInvitacion,
@@ -221,6 +222,8 @@ export function FamiliaresPage() {
   const [modalInvitarAbierto, setModalInvitarAbierto] = useState(false)
   const [adultoDosPasos, setAdultoDosPasos] = useState<AdultoVinculado | null>(null)
   const [adultoCofamiliar, setAdultoCofamiliar] =
+    useState<AdultoVinculado | null>(null)
+  const [adultoFamiliares, setAdultoFamiliares] =
     useState<AdultoVinculado | null>(null)
   const [errorAccion, setErrorAccion] = useState<string | null>(null)
 
@@ -523,10 +526,10 @@ export function FamiliaresPage() {
                             <Button
                               size="sm"
                               disabled={ocupado}
-                              aria-label={`Invitar a otro familiar a cuidar a ${adulto.nombre} ${adulto.apellido}`}
-                              onClick={() => setAdultoCofamiliar(adulto)}
+                              aria-label={`Ver e invitar familiares de ${adulto.nombre} ${adulto.apellido}`}
+                              onClick={() => setAdultoFamiliares(adulto)}
                             >
-                              Invitar familiar
+                              Familiares
                             </Button>
                             <Button
                               variant="secondary"
@@ -604,7 +607,8 @@ export function FamiliaresPage() {
             </p>
             <p className="mt-1 text-sm text-salvia-600">
               Los adultos que cuidas aparecen en «Adultos que cuidas».
-              Para compartir su cuidado, usa «Invitar familiar» en el adulto.
+              Para ver quién más lo acompaña o compartir su cuidado, usa
+              «Familiares» en el adulto.
               El adulto mayor acepta la invitación desde su aplicación.
             </p>
           </div>
@@ -696,6 +700,18 @@ export function FamiliaresPage() {
           abierto={adultoDosPasos !== null}
           adulto={adultoDosPasos}
           onCerrar={() => setAdultoDosPasos(null)}
+        />
+      )}
+
+      {adultoFamiliares && (
+        <FamiliaresAdultoModal
+          key={adultoFamiliares.id}
+          adulto={adultoFamiliares}
+          onInvitar={() => {
+            setAdultoCofamiliar(adultoFamiliares)
+            setAdultoFamiliares(null)
+          }}
+          onCerrar={() => setAdultoFamiliares(null)}
         />
       )}
 

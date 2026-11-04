@@ -6,6 +6,7 @@ export {
   useCompletarInvitacion,
   useConfirmarDosPasos,
   useDesvincularFamiliar,
+  useFamiliaresDeAdulto,
   useInvitacionesPendientes,
   useInvitarCofamiliar,
   useInvitarFamiliar,

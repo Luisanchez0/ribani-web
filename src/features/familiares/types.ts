@@ -180,6 +180,9 @@ export type ActualizarVinculo = components['schemas']['UpdateFamiliarDto']
 export type CrearInvitacion =
   components['schemas']['CrearInvitacionFamiliarDto']
 
+/** GET /familiares/adultos/{adultoId}/familiares — quién acompaña al adulto. */
+export type FamiliarDeAdulto = components['schemas']['FamiliarDeAdultoRespuestaDto']
+
 /** POST /familiares/invitaciones/familiar — invitar a otro familiar. */
 export type InvitarCofamiliar = components['schemas']['InvitarCofamiliarDto']
 

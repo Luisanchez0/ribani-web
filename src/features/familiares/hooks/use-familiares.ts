@@ -22,6 +22,19 @@ export const clavesFamiliares = {
   misFamiliares: ['familiares', 'mis-familiares'] as const,
   invitacionesPendientes: ['familiares', 'invitaciones-pendientes'] as const,
   detalle: (id: string) => ['familiares', id] as const,
+  deAdulto: (adultoId: string) =>
+    ['familiares', 'adulto', adultoId, 'familiares'] as const,
+}
+
+/**
+ * GET /familiares/adultos/{adultoId}/familiares — quién más acompaña a un
+ * adulto. Cuelga de ['familiares'], así que invitar o revocar la refresca.
+ */
+export function useFamiliaresDeAdulto(adultoId: string) {
+  return useQuery({
+    queryKey: clavesFamiliares.deAdulto(adultoId),
+    queryFn: () => familiaresApi.familiaresDeAdulto(adultoId),
+  })
 }
 
 /** GET /familiares — lista completa de vínculos (admin/depuración). */
