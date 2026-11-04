@@ -78,7 +78,10 @@ function MarcaAcceso() {
 }
 
 export function LoginPage() {
-  const [vista, setVista] = useState<Vista>('login')
+  // La landing enlaza a /login?vista=registro; solo se acepta ese valor.
+  const [vista, setVista] = useState<Vista>(() =>
+    new URLSearchParams(window.location.search).get('vista') === 'registro' ? 'registro' : 'login',
+  )
 
   // Login
   const [email, setEmail] = useState('')
