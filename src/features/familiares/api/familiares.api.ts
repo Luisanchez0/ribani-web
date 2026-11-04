@@ -8,6 +8,7 @@ import type {
   CompletarInvitacion,
   CrearInvitacion,
   CrearVinculo,
+  InvitarCofamiliar,
   FamiliarVinculado,
   FamiliarVinculadoRespuesta,
   InvitacionPendiente,
@@ -167,6 +168,12 @@ export const familiaresApi = {
   invitar(datos: CrearInvitacion): Promise<void> {
     return apiClient
       .post('/familiares/invitaciones', datos)
+      .then(() => undefined)
+  },
+
+  invitarCofamiliar(datos: InvitarCofamiliar): Promise<void> {
+    return apiClient
+      .post('/familiares/invitaciones/familiar', datos)
       .then(() => undefined)
   },
 

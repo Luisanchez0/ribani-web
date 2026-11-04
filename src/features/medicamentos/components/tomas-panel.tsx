@@ -14,10 +14,16 @@ import {
   useTomas,
 } from '../hooks'
 import type { Toma } from '../types'
+import { AdultoEtiqueta } from './adulto-etiqueta'
+import type { InfoAdulto } from './adulto-etiqueta'
 
 type TomasPanelProps = {
   /** Medicamentos listados en la página (para mapear id → nombre). */
   medicamentos: ReturnType<typeof useMedicamentos>
+  /** Adulto seleccionado en la página; se envía como filtro al backend. */
+  adultoId?: string
+  /** Solo se pasa con varios adultos: muestra a quién pertenece cada toma. */
+  infoAdultos?: Map<string, InfoAdulto>
 }
 
 type FiltroEstado = 'TODAS' | 'PENDIENTE' | 'TOMADA' | 'OMITIDA'
@@ -100,7 +106,11 @@ function claseEstado(estado: Toma['estado']): string {
  * Los errores del server (ventana de registro, toma registrada, etc.)
  * se muestran tal cual llegan en el mensaje del axios error.
  */
-export function TomasPanel({ medicamentos }: TomasPanelProps) {
+export function TomasPanel({
+  medicamentos,
+  adultoId,
+  infoAdultos,
+}: TomasPanelProps) {
   const [filtroEstado, setFiltroEstado] = useState<FiltroEstado>('TODAS')
   const [desde, setDesde] = useState('')
   const [hasta, setHasta] = useState('')
@@ -108,6 +118,7 @@ export function TomasPanel({ medicamentos }: TomasPanelProps) {
   // Rango de fechas → backend (query desde/hasta); estado → cliente.
   // Recordar: cambiar la key recalcula el query (refetch al cambiar filtro).
   const filtrosBackend = {
+    ...(adultoId ? { adultoId } : {}),
     ...(desde ? { desde: new Date(`${desde}T00:00:00`).toISOString() } : {}),
     ...(hasta ? { hasta: new Date(`${hasta}T23:59:59`).toISOString() } : {}),
   }
@@ -308,6 +319,14 @@ export function TomasPanel({ medicamentos }: TomasPanelProps) {
                     <p className="truncate text-sm font-medium text-pino-900">
                       {nombreDe(toma.medicamento_id)}
                     </p>
+                    {infoAdultos && !adultoId && (
+                      <div className="my-0.5 text-salvia-800">
+                        <AdultoEtiqueta
+                          adulto={infoAdultos.get(toma.adulto_id)}
+                          compacta
+                        />
+                      </div>
+                    )}
                     <p className="text-xs text-salvia-600">
                       {formatFechaHora(toma.programada_para)}
                       {toma.estado === 'POSPUESTA' ? ` · aviso ${formatFechaHora(toma.recordar_en)}` : ''}
@@ -411,11 +430,16 @@ export function TomasPanel({ medicamentos }: TomasPanelProps) {
 
       {tomaRegistrando && medicamentos.data?.length ? (
         <ModalRegistrarToma
-          medicamentos={medicamentos.data.map((m) => ({
-            id: m.id,
-            activo: m.activo,
-            nombre: m.nombre,
-          }))}
+          medicamentos={medicamentos.data
+            .filter((m) => !adultoId || m.adulto_id === adultoId)
+            .map((m) => {
+              const adulto = infoAdultos?.get(m.adulto_id)?.nombre
+              return {
+                id: m.id,
+                activo: m.activo,
+                nombre: adulto ? `${m.nombre} — ${adulto}` : m.nombre,
+              }
+            })}
           onCerrar={() => setTomaRegistrando(false)}
         />
       ) : null}

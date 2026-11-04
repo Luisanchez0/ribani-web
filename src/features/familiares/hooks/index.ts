@@ -7,6 +7,7 @@ export {
   useConfirmarDosPasos,
   useDesvincularFamiliar,
   useInvitacionesPendientes,
+  useInvitarCofamiliar,
   useInvitarFamiliar,
   useMisAdultos,
   useMisFamiliares,

@@ -6,6 +6,7 @@ import type {
   CompletarInvitacion,
   CrearInvitacion,
   CrearVinculo,
+  InvitarCofamiliar,
 } from '../types'
 
 /** Claves de cache 2FA asistido (por adulto). */
@@ -107,6 +108,21 @@ export function useInvitarFamiliar() {
 
   return useMutation({
     mutationFn: (datos: CrearInvitacion) => familiaresApi.invitar(datos),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: clavesFamiliares.todos })
+    },
+  })
+}
+
+/**
+ * POST /familiares/invitaciones/familiar — invita a otro familiar a acompañar
+ * a un adulto con vínculo ACTIVA; el adulto mayor acepta desde su app.
+ */
+export function useInvitarCofamiliar() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (datos: InvitarCofamiliar) => familiaresApi.invitarCofamiliar(datos),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: clavesFamiliares.todos })
     },

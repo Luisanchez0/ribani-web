@@ -772,6 +772,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/familiares/invitaciones/familiar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["InvitacionesFamiliaresController_invitarFamiliar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/familiares/invitaciones/solicitar-codigo": {
         parameters: {
             query?: never;
@@ -1687,6 +1703,31 @@ export interface components {
             usuarios_adulto_familiares_familiar_idTousuarios?: components["schemas"]["UsuarioResumenDto"] | null;
             adulto: components["schemas"]["InvitacionAdultoDto"];
             esNuevaCuenta: boolean;
+            mensaje: string;
+        };
+        InvitarCofamiliarDto: {
+            /** Format: uuid */
+            adulto_id: string;
+            /** Format: email */
+            familiar_email: string;
+            parentesco?: string;
+            puede_ver_ubicacion?: boolean;
+            puede_gestionar_medicamentos?: boolean;
+        };
+        InvitacionCofamiliarRespuestaDto: {
+            id: string;
+            adulto_id: string;
+            familiar_id: string;
+            parentesco?: string | null;
+            es_contacto_principal: boolean;
+            puede_ver_ubicacion: boolean;
+            puede_gestionar_medicamentos: boolean;
+            /** @enum {string} */
+            estado: "PENDIENTE" | "ACTIVA" | "REVOCADA";
+            /** Format: date-time */
+            created_at: string;
+            usuarios_adulto_familiares_adulto_idTousuarios?: components["schemas"]["UsuarioResumenDto"] | null;
+            usuarios_adulto_familiares_familiar_idTousuarios?: components["schemas"]["UsuarioResumenDto"] | null;
             mensaje: string;
         };
         SolicitarCodigoInvitacionDto: {
@@ -3462,6 +3503,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InvitacionFamiliarRespuestaDto"];
+                };
+            };
+        };
+    };
+    InvitacionesFamiliaresController_invitarFamiliar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvitarCofamiliarDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitacionCofamiliarRespuestaDto"];
                 };
             };
         };

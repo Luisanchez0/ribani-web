@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 
 import { Alert } from '@/components/ui/alert'
@@ -8,6 +8,9 @@ import { Spinner } from '@/components/ui/spinner'
 import { IconoMedicamentos } from '@/lib/iconos'
 import { Td, Table, Th } from '@/components/ui/table'
 import { formatFecha } from '@/lib/format'
+import { useAdultosVinculados } from '@/features/contactos'
+import { AdultoEtiqueta } from '../components/adulto-etiqueta'
+import type { InfoAdulto } from '../components/adulto-etiqueta'
 import { HorarioFormularioModal } from '../components/horario-formulario-modal'
 import { MedicamentoFormularioModal } from '../components/medicamento-formulario-modal'
 import { TomasPanel } from '../components/tomas-panel'
@@ -71,9 +74,11 @@ function mensajeDeError(error: unknown): string {
  */
 function PanelHorarios({
   medicamento,
+  nombreAdulto,
   onCerrar,
 }: {
   medicamento: Medicamento
+  nombreAdulto?: string
   onCerrar: () => void
 }) {
   const horarios = useHorarios(medicamento.id)
@@ -116,7 +121,8 @@ function PanelHorarios({
               Horarios de {medicamento.nombre}
             </h2>
             <p className="mt-1 text-sm/6 text-salvia-700">
-              Defines cuándo se programa cada toma.
+              {nombreAdulto ? `Para ${nombreAdulto}. ` : ''}Defines cuándo se
+              programa cada toma.
             </p>
           </div>
           <Button
@@ -261,9 +267,11 @@ function PanelHorarios({
  */
 function ModalTomaPuntual({
   medicamento,
+  nombreAdulto,
   onCerrar,
 }: {
   medicamento: Medicamento
+  nombreAdulto?: string
   onCerrar: () => void
 }) {
   const crearToma = useCrearToma()
@@ -311,7 +319,8 @@ function ModalTomaPuntual({
           Programar toma de {medicamento.nombre}
         </h2>
         <p className="mt-1 text-sm/6 text-salvia-700">
-          Crea un registro puntual además de los horarios automáticos.
+          {nombreAdulto ? `Para ${nombreAdulto}. ` : ''}Crea un registro
+          puntual además de los horarios automáticos.
         </p>
 
         <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
@@ -381,6 +390,7 @@ function ModalTomaPuntual({
  */
 export function MedicamentosPage() {
   const medicamentos = useMedicamentos()
+  const adultos = useAdultosVinculados()
   const desactivar = useActualizarMedicamento()
   const eliminar = useEliminarMedicamento()
 
@@ -393,6 +403,26 @@ export function MedicamentosPage() {
   const [medicamentoHorarios, setMedicamentoHorarios] =
     useState<Medicamento | null>(null)
   const [errorAccion, setErrorAccion] = useState<string | null>(null)
+  // '' = todos los adultos. Filtro local: la lista completa ya está en cache.
+  const [adultoFiltro, setAdultoFiltro] = useState('')
+
+  const infoAdultos = useMemo(() => {
+    const mapa = new Map<string, InfoAdulto>()
+    ;(adultos.data ?? []).forEach((adulto, indice) => {
+      mapa.set(adulto.id, {
+        nombre: `${adulto.nombre} ${adulto.apellido}`.trim(),
+        indice,
+      })
+    })
+    return mapa
+  }, [adultos.data])
+
+  // Con un solo adulto la columna y el filtro no aportan nada.
+  const variosAdultos = infoAdultos.size > 1
+  const filtroActivo = variosAdultos && infoAdultos.has(adultoFiltro)
+  const visibles = (medicamentos.data ?? []).filter(
+    (medicamento) => !filtroActivo || medicamento.adulto_id === adultoFiltro,
+  )
 
   const ocupados = new Set<string>([
     ...(desactivar.isPending && desactivar.variables
@@ -463,6 +493,43 @@ export function MedicamentosPage() {
         </div>
       )}
 
+      {variosAdultos && (
+        <div
+          role="group"
+          aria-label="Filtrar medicamentos por adulto mayor"
+          className="flex flex-wrap items-center gap-2"
+        >
+          <span className="mr-1 text-sm font-medium text-salvia-700">
+            Adulto mayor:
+          </span>
+          {[
+            { id: '', etiqueta: 'Todos' },
+            ...[...infoAdultos].map(([id, info]) => ({
+              id,
+              etiqueta: info.nombre,
+            })),
+          ].map(({ id, etiqueta }) => {
+            const activo = filtroActivo ? adultoFiltro === id : id === ''
+            const info = infoAdultos.get(id)
+            return (
+              <button
+                key={id || 'todos'}
+                type="button"
+                aria-pressed={activo}
+                onClick={() => setAdultoFiltro(id)}
+                className={`inline-flex min-h-11 items-center rounded-full border px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pino-600 motion-reduce:transition-none ${
+                  activo
+                    ? 'border-pino-600 bg-pino-50 text-pino-900 ring-1 ring-pino-600'
+                    : 'border-salvia-300 bg-white text-pino-900 hover:bg-salvia-100'
+                }`}
+              >
+                {info ? <AdultoEtiqueta adulto={info} compacta /> : etiqueta}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       <div className="rounded-lg border border-salvia-200 bg-white shadow-sm">
         {medicamentos.isPending ? (
           <div className="flex items-center justify-center gap-3 p-10 text-sm text-salvia-600">
@@ -495,11 +562,27 @@ export function MedicamentosPage() {
               tomas.
             </p>
           </div>
+        ) : visibles.length === 0 ? (
+          <div className="p-10 text-center">
+            <p className="text-sm font-medium text-pino-900">
+              {infoAdultos.get(adultoFiltro)?.nombre} no tiene medicamentos
+              registrados
+            </p>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="mt-3"
+              onClick={() => setAdultoFiltro('')}
+            >
+              Ver todos los medicamentos
+            </Button>
+          </div>
         ) : (
           <Table>
             <thead>
               <tr>
                 <Th>Nombre</Th>
+                {variosAdultos && <Th>Adulto mayor</Th>}
                 <Th>Dosis</Th>
                 <Th>Instrucciones</Th>
                 <Th>Inicio</Th>
@@ -510,12 +593,19 @@ export function MedicamentosPage() {
               </tr>
             </thead>
             <tbody>
-              {medicamentos.data.map((medicamento) => {
+              {visibles.map((medicamento) => {
                 const ocupado = ocupados.has(medicamento.id)
 
                 return (
                   <tr key={medicamento.id} className="hover:bg-salvia-50">
                     <Td className="font-medium">{medicamento.nombre}</Td>
+                    {variosAdultos && (
+                      <Td>
+                        <AdultoEtiqueta
+                          adulto={infoAdultos.get(medicamento.adulto_id)}
+                        />
+                      </Td>
+                    )}
                     <Td>
                       {medicamento.dosis} {medicamento.unidad_dosis}
                     </Td>
@@ -596,6 +686,11 @@ export function MedicamentosPage() {
         <ModalTomaPuntual
           key={`toma-${medicamentoToma.id}`}
           medicamento={medicamentoToma}
+          nombreAdulto={
+            variosAdultos
+              ? infoAdultos.get(medicamentoToma.adulto_id)?.nombre
+              : undefined
+          }
           onCerrar={() => setMedicamentoToma(null)}
         />
       )}
@@ -603,6 +698,11 @@ export function MedicamentosPage() {
         <PanelHorarios
           key={`horarios-${medicamentoHorarios.id}`}
           medicamento={medicamentoHorarios}
+          nombreAdulto={
+            variosAdultos
+              ? infoAdultos.get(medicamentoHorarios.adulto_id)?.nombre
+              : undefined
+          }
           onCerrar={() => setMedicamentoHorarios(null)}
         />
       )}
@@ -610,7 +710,11 @@ export function MedicamentosPage() {
       {/* Sección de tomas: gestión de los registros concretos que dispara
           el cron + puntuales (ver, filtrar, tomar/omitar, mover, borrar). */}
       {!medicamentos.isPending && !medicamentos.isError && (
-        <TomasPanel medicamentos={medicamentos} />
+        <TomasPanel
+          medicamentos={medicamentos}
+          adultoId={filtroActivo ? adultoFiltro : undefined}
+          infoAdultos={variosAdultos ? infoAdultos : undefined}
+        />
       )}
     </section>
   )

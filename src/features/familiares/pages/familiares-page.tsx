@@ -6,6 +6,7 @@ import { IconoFamiliares } from '@/lib/iconos'
 import { Td, Table, Th } from '@/components/ui/table'
 import { formatFecha } from '@/lib/format'
 import { InvitarFamiliarModal } from '../components/invitar-familiar-modal'
+import { InvitarCofamiliarModal } from '../components/invitar-cofamiliar-modal'
 import { DosPasosAdultoModal } from '../components/dos-pasos-adulto-modal'
 import {
   useAceptarInvitacion,
@@ -219,6 +220,8 @@ export function FamiliaresPage() {
 
   const [modalInvitarAbierto, setModalInvitarAbierto] = useState(false)
   const [adultoDosPasos, setAdultoDosPasos] = useState<AdultoVinculado | null>(null)
+  const [adultoCofamiliar, setAdultoCofamiliar] =
+    useState<AdultoVinculado | null>(null)
   const [errorAccion, setErrorAccion] = useState<string | null>(null)
 
   function aceptarInvitacion(id: string) {
@@ -368,7 +371,8 @@ export function FamiliaresPage() {
       </div>
       <p className="max-w-2xl text-sm/6 text-salvia-700">
         Invita al adulto mayor por correo para vincularlo contigo como cuidador.
-        El adulto debe aceptar la invitación para activar tu acceso.
+        Cuando el vínculo esté activo, también puedes invitar a otros familiares
+        a compartir su cuidado. El adulto acepta cada invitación.
       </p>
       {/* Invitaciones pendientes (GET /familiares/invitaciones/pendientes) */}
       {!invitaciones.isPending &&
@@ -515,14 +519,24 @@ export function FamiliaresPage() {
                     <Td>
                       <div className="flex flex-wrap items-center justify-end gap-2">
                         {adulto.estado === 'ACTIVA' && (
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            disabled={ocupado}
-                            onClick={() => setAdultoDosPasos(adulto)}
-                          >
-                            2FA
-                          </Button>
+                          <>
+                            <Button
+                              size="sm"
+                              disabled={ocupado}
+                              aria-label={`Invitar a otro familiar a cuidar a ${adulto.nombre} ${adulto.apellido}`}
+                              onClick={() => setAdultoCofamiliar(adulto)}
+                            >
+                              Invitar familiar
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              disabled={ocupado}
+                              onClick={() => setAdultoDosPasos(adulto)}
+                            >
+                              2FA
+                            </Button>
+                          </>
                         )}
                         <Button
                           variant="secondary"
@@ -590,7 +604,8 @@ export function FamiliaresPage() {
             </p>
             <p className="mt-1 text-sm text-salvia-600">
               Los adultos que cuidas aparecen en «Adultos que cuidas».
-              Un administrador puede vincular varios cuidadores al mismo adulto mayor.
+              Para compartir su cuidado, usa «Invitar familiar» en el adulto.
+              El adulto mayor acepta la invitación desde su aplicación.
             </p>
           </div>
         ) : (
@@ -681,6 +696,14 @@ export function FamiliaresPage() {
           abierto={adultoDosPasos !== null}
           adulto={adultoDosPasos}
           onCerrar={() => setAdultoDosPasos(null)}
+        />
+      )}
+
+      {adultoCofamiliar && (
+        <InvitarCofamiliarModal
+          key={adultoCofamiliar.id}
+          adulto={adultoCofamiliar}
+          onCerrar={() => setAdultoCofamiliar(null)}
         />
       )}
     </section>
