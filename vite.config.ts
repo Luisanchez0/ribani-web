@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa'
 
 const adaptadorIconosWeb = fileURLToPath(
   new URL('./src/lib/create-icon-web.ts', import.meta.url),
@@ -17,6 +18,44 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    VitePWA({
+      registerType: 'prompt',
+      injectRegister: 'script',
+      includeAssets: ['favicon.svg', 'icons/*.png'],
+      manifest: {
+        id: '/',
+        name: 'RIBANI — Seguimiento de adultos mayores',
+        short_name: 'RIBANI',
+        description: 'Seguimiento y cuidado de adultos mayores.',
+        lang: 'es',
+        start_url: '/panel',
+        scope: '/',
+        display: 'standalone',
+        theme_color: '#02542d',
+        background_color: '#f6f8f6',
+        icons: [
+          { src: '/icons/pwa-192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/icons/pwa-512.png', sizes: '512x512', type: 'image/png' },
+          {
+            src: '/icons/pwa-maskable-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+        ],
+      },
+      workbox: {
+        globPatterns: ['**/*.{html,js,css,svg,png,ico,woff2}'],
+        cleanupOutdatedCaches: true,
+        // Solo la interfaz local: HTTP, SSE, mapas y fuentes externas usan red.
+        runtimeCaching: [],
+        navigateFallback: '/index.html',
+        navigateFallbackAllowlist: [
+          /^\/(?:\?|$)/,
+          /^\/(?:login|panel|admin)(?:\/|\?|$)/,
+        ],
+      },
+    }),
     {
       /*
        * reicon-react-native construye sus íconos sobre react-native-svg

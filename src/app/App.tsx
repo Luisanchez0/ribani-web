@@ -1,10 +1,15 @@
+import { ConnectionStatus } from '@/components/layout/connection-status'
+
 import { AppProviders } from './providers'
 import { AppRouter } from './router'
 
 export function App() {
   return (
-    <AppProviders>
-      <AppRouter />
-    </AppProviders>
+    <>
+      <ConnectionStatus />
+      <AppProviders>
+        <AppRouter />
+      </AppProviders>
+    </>
   )
 }

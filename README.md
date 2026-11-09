@@ -87,6 +87,53 @@ No editar `src/types/api.d.ts` manualmente. Ya se regeneró desde el contrato
 actualizado; autenticación, sesión y usuarios/perfil consumen sus schemas.
 Falta documentar las respuestas y sustituir tipos HTTP manuales de otros dominios.
 
+## PWA: instalación y uso sin conexión
+
+El build genera `manifest.webmanifest`, `sw.js` e iconos de RIBANI. El service
+worker se registra en producción; `npm run dev` no instala la caché offline.
+Para verificarlo localmente:
+
+```powershell
+npm run build
+npm run preview
+```
+
+El build necesita `VITE_API_URL` con HTTPS, como en producción. Abrir el origen
+`localhost` indicado por preview, visitar la aplicación con conexión y esperar
+a que el service worker se active antes de probar offline. Para instalar:
+
+- Chrome/Edge compatibles: opción «Instalar RIBANI» en el navegador.
+- iPhone/iPad: compartir la página en Safari y elegir «Agregar a inicio».
+- Producción: servir la web y API por HTTPS y conservar el fallback SPA.
+  Una IP de la red local por HTTP no sustituye a `localhost` para estas pruebas.
+
+La PWA inicia en `/panel` y conserva los guards existentes. El service worker
+guarda únicamente archivos estáticos locales. No almacena respuestas de API,
+SSE, mapas ni fuentes externas, y no encola operaciones para enviarlas después.
+Tras una primera visita online, la interfaz puede abrir sin conexión en `/`,
+`/login`, `/panel/*` y `/admin/*`; consultar datos, autenticar y guardar cambios
+sigue necesitando la API. Los datos que permanezcan en memoria no son actuales.
+
+Un aviso global informa cuando el navegador detecta desconexión, incluso durante
+la restauración de sesión, y desaparece al recuperar la red. `navigator.onLine`
+indica conectividad del dispositivo: no confirma que el backend esté disponible.
+Los errores HTTP siguen gestionándose mediante los flujos existentes.
+
+Las versiones nuevas del service worker esperan a que se cierren las ventanas
+de la aplicación para activarse, evitando recargar un formulario en curso.
+nginx sirve los archivos de registro, service worker y manifiesto con `no-cache`
+y responde 404 si faltan. El escudo original de `public/favicon.svg` se reutiliza
+en los iconos; para regenerarlos en Windows:
+
+```powershell
+./scripts/generate-pwa-icons.ps1
+```
+
+Comprobación en DevTools: Application → Manifest y Service workers; después,
+Network → Offline y recargar una ruta profunda. Verificar que aparece «Sin
+conexión», que la interfaz abre desde caché y que Cache Storage contiene solo
+archivos estáticos. Al volver a Online, comprobar que el aviso desaparece.
+
 ## Contenedor
 
 `Dockerfile` construye el SPA y lo sirve con nginx (`docker/nginx.conf`):
