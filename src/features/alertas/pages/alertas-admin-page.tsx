@@ -11,7 +11,8 @@ import {
 import { formatFechaHora } from '@/lib/format'
 import { useAdultos } from '@/features/usuarios'
 
-import { useAlertas, useEliminarAlerta, type Alerta } from '../api/alertas.api'
+import { useAlertas, type Alerta } from '../api/alertas.api'
+import { AccionesAlerta } from '../components/acciones-alerta'
 
 
 export function AlertasAdminPage() {
@@ -28,17 +29,7 @@ export function AlertasAdminPage() {
     [adultoFiltro, estadoFiltro],
   )
 
-  const alertas = useAlertas(params)
-  const eliminar = useEliminarAlerta()
-
-  /** Baja lógica: la alerta pasa a CANCELADA y sale del historial. */
-  function quitar(alerta: Alerta) {
-    const confirmado = window.confirm(
-      `¿Eliminar del historial la alerta "${alerta.titulo}"? La fila se conserva para auditoría.`,
-    )
-    if (!confirmado) return
-    eliminar.mutate(alerta.id)
-  }
+  const alertas = useAlertas(params, 30_000)
 
   /** Nombre del adulto por id (map de la lista de usuarios). */
   const nombreAdulto = useMemo(() => {
@@ -59,8 +50,8 @@ export function AlertasAdminPage() {
       </div>
 
       <p className="max-w-2xl text-sm/6 text-salvia-700">
-        Todas las alertas generadas por los adultos mayores del sistema:
-        caídas, SOS, zonas seguras, medicamentos e inactividad.
+        Consulta las alertas de los adultos mayores y atiende, resuelve o cancela
+        las pendientes. La lista se actualiza cada 30 segundos.
       </p>
 
       {/* Filtros */}
@@ -145,10 +136,6 @@ export function AlertasAdminPage() {
           <TablaAlertas
             alertas={alertas.data}
             nombreAdulto={nombreAdulto}
-            onEliminar={quitar}
-            ocupados={
-              eliminar.isPending && eliminar.variables ? [eliminar.variables] : []
-            }
           />
         )}
       </div>
@@ -177,13 +164,9 @@ const clasesEstado: EstadoClases = {
 function TablaAlertas({
   alertas,
   nombreAdulto,
-  onEliminar,
-  ocupados,
 }: {
   alertas: Alerta[]
   nombreAdulto: Map<string, string>
-  onEliminar: (alerta: Alerta) => void
-  ocupados: string[]
 }) {
   return (
     <Table>
@@ -226,14 +209,7 @@ function TablaAlertas({
               </span>
             </Td>
             <Td className="text-right">
-              <Button
-                variant="danger"
-                size="sm"
-                disabled={ocupados.includes(alerta.id)}
-                onClick={() => onEliminar(alerta)}
-              >
-                Eliminar
-              </Button>
+              <AccionesAlerta alerta={alerta} permitirEliminar />
             </Td>
           </tr>
         ))}

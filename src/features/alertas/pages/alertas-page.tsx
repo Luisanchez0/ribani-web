@@ -226,11 +226,7 @@ const clasesEstado: EstadoClases = {
 const etiquetaTipo: Record<Alerta['tipo'], string> = {
   SOS: 'SOS',
   CAIDA: 'Caída',
-  ZONA_SEGURA: 'Zona segura',
-  MEDICAMENTO: 'Medicamento',
-  INACTIVIDAD: 'Inactividad',
-  SISTEMA: 'Sistema',
-  OTRA: 'Otra',
+  SALIDA_ZONA: 'Salida de zona segura',
 }
 
 type TablaAlertasProps = {

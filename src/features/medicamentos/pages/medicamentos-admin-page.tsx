@@ -1,220 +1,209 @@
 import { useMemo, useState } from 'react'
 
+import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
-import { Td, Table, Th } from '@/components/ui/table'
-import { IconoMedicamentos } from '@/lib/iconos'
-import {
-  BARRA_FILTROS,
-  CONTROL_FILTRO,
-} from '@/lib/clases-filtros'
-import { formatFecha } from '@/lib/format'
 import { useAdultos } from '@/features/usuarios'
+import { IconoMedicamentos } from '@/lib/iconos'
 
+import type { InfoAdulto } from '../components/adulto-etiqueta'
+import { GrupoMedicamentosAdmin } from '../components/grupo-medicamentos-admin'
 import { useMedicamentos } from '../hooks'
 import type { Medicamento } from '../types'
+import { filtrarMedicamentos, type EstadoFiltroMedicamentos } from '../utils/filtrar-medicamentos'
 
-/**
- * Medicamentos (/admin/medicamentos, solo ADMINISTRADOR): vista de solo
- * lectura de TODOS los medicamentos del sistema, agrupados por adulto.
- * La edición sigue siendo tarea del familiar encargado desde su panel.
- */
+const LIMITE_MEDICAMENTOS = 500
+
+/** Supervisión administrativa de medicamentos; conserva la vista de consulta. */
 export function MedicamentosAdminPage() {
-  const medicamentos = useMedicamentos({ soloActivos: false })
-  const adultos = useAdultos()
-
-  // Filtros: adulto (GET de backend), texto (cliente) y estado (cliente).
   const [adultoSel, setAdultoSel] = useState('')
   const [busqueda, setBusqueda] = useState('')
-  const [soloActivos, setSoloActivos] = useState(false)
+  const [estado, setEstado] = useState<EstadoFiltroMedicamentos>('todos')
+  const medicamentos = useMedicamentos({
+    soloActivos: false,
+    limite: LIMITE_MEDICAMENTOS,
+    ...(adultoSel ? { adultoId: adultoSel } : {}),
+  })
+  const adultos = useAdultos()
 
-  const nombreAdulto = useMemo(() => {
-    const mapa = new Map<string, string>()
-    for (const a of adultos.data ?? []) {
-      mapa.set(a.id, `${a.nombre} ${a.apellido}`)
-    }
-    return mapa
-  }, [adultos.data])
+  const nombresAdultos = useMemo(() => new Map(
+    (adultos.data ?? []).map(adulto => [adulto.id, `${adulto.nombre} ${adulto.apellido}`]),
+  ), [adultos.data])
 
-  /**
-   * Filtrado cliente sobre la lista cargada (el backend solo soporta
-   * adultoId/soloActivos): búsqueda por nombre/instrucciones y estado.
-   */
-  const filtrados = useMemo(() => {
-    const texto = busqueda.trim().toLowerCase()
-    return (medicamentos.data ?? []).filter((m) => {
-      if (adultoSel && m.adulto_id !== adultoSel) return false
-      if (soloActivos && !m.activo) return false
-      if (texto && !`${m.nombre} ${m.instrucciones ?? ''}`.toLowerCase().includes(texto)) return false
-      return true
-    })
-  }, [medicamentos.data, adultoSel, soloActivos, busqueda])
+  const etiquetasAdultos = useMemo(() => new Map<string, InfoAdulto>(
+    [...nombresAdultos].map(([id, nombre], indice) => [id, { nombre, indice }]),
+  ), [nombresAdultos])
 
-  /** Agrupa por adulto_id preservando el orden del backend. */
+  const filtrados = useMemo(
+    () => filtrarMedicamentos(medicamentos.data ?? [], busqueda, estado, nombresAdultos),
+    [medicamentos.data, busqueda, estado, nombresAdultos],
+  )
+
   const porAdulto = useMemo(() => {
     const grupos = new Map<string, Medicamento[]>()
     for (const medicamento of filtrados) {
-      const lista = grupos.get(medicamento.adulto_id) ?? []
-      lista.push(medicamento)
-      grupos.set(medicamento.adulto_id, lista)
+      const grupo = grupos.get(medicamento.adulto_id) ?? []
+      grupo.push(medicamento)
+      grupos.set(medicamento.adulto_id, grupo)
     }
-    return grupos
+    return [...grupos]
   }, [filtrados])
 
+  const activos = filtrados.filter(medicamento => medicamento.activo).length
+  const hayFiltros = busqueda.trim() !== '' || adultoSel !== '' || estado !== 'todos'
+  const limiteAlcanzado = (medicamentos.data?.length ?? 0) >= LIMITE_MEDICAMENTOS
+  const resumen = [
+    { etiqueta: 'Medicamentos', valor: filtrados.length, detalle: 'En los resultados' },
+    { etiqueta: 'Activos', valor: activos, detalle: 'Registros habilitados' },
+    { etiqueta: 'Inactivos', valor: filtrados.length - activos, detalle: 'Registros desactivados' },
+    { etiqueta: 'Adultos con registro', valor: porAdulto.length, detalle: 'En los resultados' },
+  ]
+
+  function limpiarFiltros() {
+    setAdultoSel('')
+    setBusqueda('')
+    setEstado('todos')
+  }
+
   return (
-    <section className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="flex items-center gap-2.5 font-display text-2xl font-semibold text-pino-900">
-          <IconoMedicamentos size={24} className="text-pino-600" />
-          Medicamentos de los adultos
-        </h1>
-      </div>
-
-      {/* Filtros: adulto, texto y estado */}
-      <div className={BARRA_FILTROS}>
-        <div>
-          <label
-            htmlFor="filtro-med-adulto"
-            className="block text-sm font-medium text-salvia-700"
-          >
-            Adulto
-          </label>
-          <Select
-            id="filtro-med-adulto"
-            value={adultoSel}
-            onChange={(e) => setAdultoSel(e.target.value)}
-            className="mt-1.5"
-          >
-            <option value="">Todos</option>
-            {(adultos.data ?? []).map((adulto) => (
-              <option key={adulto.id} value={adulto.id}>
-                {adulto.nombre} {adulto.apellido}
-              </option>
-            ))}
-          </Select>
+    <section className="space-y-6">
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex min-w-0 flex-1 basis-72 items-start gap-3 sm:gap-4">
+          <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-xl border border-pino-200 bg-pino-100 text-pino-700">
+            <IconoMedicamentos size={25} />
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-medium tracking-wide text-salvia-600">Administración</p>
+            <h1 className="mt-1 font-display text-2xl font-semibold text-pino-900 sm:text-3xl">Medicamentos</h1>
+            <p className="mt-2 max-w-2xl text-sm/6 text-salvia-700">
+              Consulta las dosis, indicaciones y periodos registrados para cada adulto mayor.
+            </p>
+          </div>
         </div>
-
-        <div>
-          <label
-            htmlFor="filtro-med-buscar"
-            className="block text-sm font-medium text-salvia-700"
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="rounded-full border border-salvia-200 bg-white px-3 py-1 text-xs font-medium text-salvia-700">Vista de consulta</span>
+          <Button
+            variant="secondary"
+            disabled={medicamentos.isFetching || adultos.isFetching}
+            onClick={() => void Promise.all([medicamentos.refetch(), adultos.refetch()])}
           >
-            Buscar
-          </label>
-          <input
-            id="filtro-med-buscar"
-            type="search"
-            placeholder="Nombre o instrucciones…"
-            className={CONTROL_FILTRO}
-            value={busqueda}
-            onChange={(evento) => setBusqueda(evento.target.value)}
-          />
+            {medicamentos.isFetching || adultos.isFetching ? 'Actualizando…' : 'Actualizar'}
+          </Button>
         </div>
+      </header>
 
-        <label className="flex min-h-11 items-center gap-3 self-end rounded-lg border border-salvia-200 bg-salvia-50 px-3 py-2.5 text-sm text-salvia-700">
-          <input
-            type="checkbox"
-            className="size-4 rounded border-salvia-300 accent-pino-600"
-            checked={soloActivos}
-            onChange={(e) => setSoloActivos(e.target.checked)}
-          />
-          Solo activos
-        </label>
-      </div>
+      <dl className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        {resumen.map((item, indice) => (
+          <div key={item.etiqueta} className={`rounded-xl border p-4 sm:p-5 ${
+            indice === 1 ? 'border-pino-200 bg-pino-50' : 'border-salvia-200 bg-white'
+          }`}>
+            <dt className="text-sm font-medium text-salvia-700">{item.etiqueta}</dt>
+            <dd className="mt-2">
+              <span className="font-display text-3xl font-semibold tabular-nums text-pino-900">
+                {medicamentos.isSuccess ? item.valor : '—'}
+              </span>
+              <span className="mt-1 block text-xs text-salvia-600">{item.detalle}</span>
+            </dd>
+          </div>
+        ))}
+      </dl>
 
-      <p className="max-w-2xl text-sm/6 text-salvia-700">
-        Todos los medicamentos registrados en el sistema, agrupados por adulto
-        mayor. El alta y edición se realiza desde el panel del familiar.
-      </p>
+      <section aria-labelledby="titulo-filtros-medicamentos" className="rounded-xl border border-salvia-200 bg-white p-4 shadow-sm sm:p-5">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <h2 id="titulo-filtros-medicamentos" className="text-sm font-semibold text-pino-900">Buscar y filtrar</h2>
+          {hayFiltros && <Button variant="secondary" size="sm" onClick={limpiarFiltros}>Limpiar filtros</Button>}
+        </div>
+        <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,2fr)_minmax(0,1.2fr)_minmax(0,1fr)]">
+          <div className="min-w-0">
+            <label htmlFor="filtro-med-buscar" className="block text-sm font-medium text-salvia-700">Buscar</label>
+            <Input
+              id="filtro-med-buscar"
+              type="search"
+              placeholder="Medicamento, indicaciones o adulto…"
+              className="mt-1.5"
+              value={busqueda}
+              onChange={evento => setBusqueda(evento.target.value)}
+              aria-controls="resultados-medicamentos"
+            />
+          </div>
+          <div className="min-w-0">
+            <label htmlFor="filtro-med-adulto" className="block text-sm font-medium text-salvia-700">Adulto mayor</label>
+            <Select
+              id="filtro-med-adulto"
+              value={adultoSel}
+              onChange={evento => setAdultoSel(evento.target.value)}
+              className="mt-1.5"
+              disabled={adultos.isPending || adultos.isError}
+              aria-controls="resultados-medicamentos"
+            >
+              <option value="">{adultos.isPending ? 'Cargando adultos…' : 'Todos los adultos'}</option>
+              {(adultos.data ?? []).map(adulto => (
+                <option key={adulto.id} value={adulto.id}>{adulto.nombre} {adulto.apellido}</option>
+              ))}
+            </Select>
+          </div>
+          <div className="min-w-0">
+            <label htmlFor="filtro-med-estado" className="block text-sm font-medium text-salvia-700">Estado</label>
+            <Select
+              id="filtro-med-estado"
+              value={estado}
+              onChange={evento => {
+                const valor = evento.target.value
+                if (valor === 'todos' || valor === 'activos' || valor === 'inactivos') setEstado(valor)
+              }}
+              className="mt-1.5"
+              aria-controls="resultados-medicamentos"
+            >
+              <option value="todos">Todos los estados</option>
+              <option value="activos">Activos</option>
+              <option value="inactivos">Inactivos</option>
+            </Select>
+          </div>
+        </div>
+      </section>
 
-      <div className="rounded-lg border border-salvia-200 bg-white shadow-sm">
+      {adultos.isError && (
+        <Alert variant="error" className="flex flex-wrap items-center justify-between gap-3">
+          <span>No se pudieron cargar los nombres de los adultos. Puedes consultar los medicamentos y reintentar.</span>
+          <Button variant="secondary" size="sm" onClick={() => void adultos.refetch()}>Reintentar adultos</Button>
+        </Alert>
+      )}
+
+      <section id="resultados-medicamentos" aria-labelledby="titulo-resultados-medicamentos" aria-busy={medicamentos.isFetching} className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 id="titulo-resultados-medicamentos" className="font-display text-lg font-semibold text-pino-900">Medicamentos por adulto</h2>
+          <p role="status" className="text-sm text-salvia-700">
+            {medicamentos.isSuccess && `${filtrados.length} resultado${filtrados.length === 1 ? '' : 's'} · ${porAdulto.length} adulto${porAdulto.length === 1 ? '' : 's'}`}
+          </p>
+        </div>
+        {limiteAlcanzado && (
+          <Alert>Se muestran hasta {LIMITE_MEDICAMENTOS} registros. Los indicadores y la búsqueda corresponden a esa selección; elige un adulto para acotar la consulta.</Alert>
+        )}
         {medicamentos.isPending ? (
-          <div className="flex items-center justify-center gap-3 p-10 text-sm text-salvia-600">
-            <Spinner size="sm" label="Cargando medicamentos" />
-            Cargando medicamentos…
+          <div role="status" className="flex min-h-48 items-center justify-center gap-3 rounded-xl border border-salvia-200 bg-white p-6 text-sm text-salvia-700">
+            <Spinner size="sm" label="Cargando medicamentos" />Cargando medicamentos…
           </div>
         ) : medicamentos.isError ? (
-          <div className="space-y-3 p-6">
-            <div
-              role="alert"
-              className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900"
-            >
-              No se pudieron cargar los medicamentos. Verifica tu conexión e
-              intenta de nuevo.
-            </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => void medicamentos.refetch()}
-            >
-              Reintentar
-            </Button>
+          <div className="space-y-4 rounded-xl border border-salvia-200 bg-white p-6">
+            <Alert variant="error">No se pudieron cargar los medicamentos. Verifica tu conexión e intenta de nuevo.</Alert>
+            <Button variant="secondary" onClick={() => void medicamentos.refetch()}>Reintentar</Button>
           </div>
         ) : filtrados.length === 0 ? (
-          <div className="p-10 text-center">
-            <p className="text-sm font-medium text-pino-900">
-              {(medicamentos.data ?? []).length === 0
-                ? 'No hay medicamentos registrados'
-                : 'Ningún medicamento coincide con los filtros'}
+          <div className="rounded-xl border border-dashed border-salvia-300 bg-white px-5 py-12 text-center">
+            <span aria-hidden="true" className="mx-auto grid size-12 place-items-center rounded-full bg-salvia-100 text-salvia-600"><IconoMedicamentos size={24} /></span>
+            <h3 className="mt-4 font-semibold text-pino-900">{hayFiltros ? 'No encontramos medicamentos con estos filtros' : 'Aún no hay medicamentos registrados'}</h3>
+            <p className="mx-auto mt-2 max-w-md text-sm/6 text-salvia-700">
+              {hayFiltros ? 'Prueba otro nombre, cambia el estado o consulta todos los adultos.' : 'Los registros aparecerán aquí cuando se agreguen medicamentos desde el panel familiar.'}
             </p>
-            <p className="mt-1 text-sm text-salvia-600">
-              {(medicamentos.data ?? []).length === 0
-                ? 'Los medicamentos aparecen cuando el familiar de cada adulto los registra desde su panel.'
-                : 'Limpia la búsqueda o cambia los filtros para ver más resultados.'}
-            </p>
+            {hayFiltros && <Button variant="secondary" className="mt-5" onClick={limpiarFiltros}>Limpiar filtros</Button>}
           </div>
-        ) : (
-          <div className="divide-y divide-salvia-100">
-            {[...porAdulto.entries()].map(([adultoId, lista]) => (
-              <div key={adultoId}>
-                <h2 className="bg-salvia-50 px-4 py-2 text-sm font-semibold text-pino-900">
-                  {nombreAdulto.get(adultoId) ?? adultoId}{' '}
-                  <span className="font-normal text-salvia-600">
-                    ({lista.length} medicamento{lista.length === 1 ? '' : 's'})
-                  </span>
-                </h2>
-                <Table>
-                  <thead>
-                    <tr>
-                      <Th>Nombre</Th>
-                      <Th>Dosis</Th>
-                      <Th>Instrucciones</Th>
-                      <Th>Inicio</Th>
-                      <Th>Estado</Th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {lista.map((medicamento) => (
-                      <tr key={medicamento.id} className="hover:bg-salvia-50">
-                        <Td className="font-medium">{medicamento.nombre}</Td>
-                        <Td>
-                          {medicamento.dosis} {medicamento.unidad_dosis}
-                        </Td>
-                        <Td className="max-w-64 truncate">
-                          {medicamento.instrucciones ?? '—'}
-                        </Td>
-                        <Td>{formatFecha(medicamento.fecha_inicio)}</Td>
-                        <Td>
-                          <span
-                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                              medicamento.activo
-                                ? 'bg-pino-100 text-pino-800'
-                                : 'bg-salvia-100 text-salvia-600'
-                            }`}
-                          >
-                            {medicamento.activo ? 'Activo' : 'Inactivo'}
-                          </span>
-                        </Td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+        ) : porAdulto.map(([adultoId, lista]) => (
+          <GrupoMedicamentosAdmin key={adultoId} adultoId={adultoId} adulto={etiquetasAdultos.get(adultoId)} medicamentos={lista} />
+        ))}
+      </section>
+      <p className="text-xs/6 text-salvia-600">Esta vista permite supervisar los registros. El alta y la edición se realizan desde el panel familiar.</p>
     </section>
   )
 }

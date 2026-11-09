@@ -32,9 +32,11 @@ function iniciales(nombre: string): string {
 export function AdultoEtiqueta({
   adulto,
   compacta = false,
+  multilinea = false,
 }: {
   adulto: InfoAdulto | undefined
   compacta?: boolean
+  multilinea?: boolean
 }) {
   if (!adulto) {
     return <span className="text-sm text-salvia-500">Adulto no disponible</span>
@@ -52,7 +54,7 @@ export function AdultoEtiqueta({
       >
         {iniciales(adulto.nombre)}
       </span>
-      <span className={`truncate ${compacta ? 'text-xs' : 'text-sm'}`}>
+      <span className={`${multilinea ? 'min-w-0 break-words' : 'truncate'} ${compacta ? 'text-xs' : 'text-sm'}`}>
         {adulto.nombre}
       </span>
     </span>

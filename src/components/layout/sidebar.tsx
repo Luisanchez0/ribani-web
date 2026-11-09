@@ -32,7 +32,6 @@ type ItemNavegacion = {
  */
 const itemsPanel: ItemNavegacion[] = [
   { to: '/panel', etiqueta: 'Inicio', Icono: IconoInicio, end: true },
-  { to: '/panel/alertas', etiqueta: 'Alertas', Icono: IconoAlertas },
   { to: '/panel/zonas-seguras', etiqueta: 'Zonas seguras', Icono: IconoZonasSeguras },
   { to: '/panel/dispositivos', etiqueta: 'Dispositivos', Icono: IconoDispositivos },
 ]

@@ -19,7 +19,7 @@ type Aviso = {
 }
 
 function textoAviso({ alerta, adulto }: Aviso): string {
-  return alerta.tipo === 'ZONA_SEGURA'
+  return alerta.tipo === 'SALIDA_ZONA'
     ? `${adulto} salió de su zona segura.`
     : `${alerta.titulo} — ${adulto}`
 }
@@ -91,7 +91,7 @@ export function AvisosAlertasProvider({ children }: { children: ReactNode }) {
       >
         {avisos.map((aviso) => {
           const { alerta } = aviso
-          const esZona = alerta.tipo === 'ZONA_SEGURA'
+          const esZona = alerta.tipo === 'SALIDA_ZONA'
           return (
             <div
               key={alerta.id}

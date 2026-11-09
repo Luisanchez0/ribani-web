@@ -26,10 +26,11 @@ export const clavesMedicamentos = {
 }
 
 /** GET /medicamentos — lista de medicamentos del adulto. */
-export function useMedicamentos(filtros?: FiltrosMedicamentos) {
+export function useMedicamentos(filtros?: FiltrosMedicamentos, enabled = true) {
   return useQuery({
     queryKey: clavesMedicamentos.lista(filtros),
     queryFn: () => medicamentosApi.listar(filtros),
+    enabled,
   })
 }
 

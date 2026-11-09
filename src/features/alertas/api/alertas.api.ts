@@ -1,25 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { apiClient } from '@/lib/api-client'
+import type { components } from '@/types/api'
 
 /** GET /alertas — fila de alerta (shape runtime, snake_case Prisma). */
-export type Alerta = {
-  id: string
-  adulto_id: string
-  dispositivo_id: string | null
-  tipo: 'SOS' | 'CAIDA' | 'ZONA_SEGURA' | 'MEDICAMENTO' | 'INACTIVIDAD' | 'SISTEMA' | 'OTRA'
-  severidad: 'BAJA' | 'MEDIA' | 'ALTA' | 'CRITICA'
-  estado: 'ABIERTA' | 'EN_ATENCION' | 'RESUELTA' | 'CANCELADA'
-  titulo: string
-  descripcion: string | null
-  latitud: number | null
-  longitud: number | null
-  ocurrida_en: string
-  atendida_por: string | null
-  atendida_en: string | null
-  cerrada_en: string | null
-  created_at: string
-}
+export type Alerta = components['schemas']['AlertaRespuestaDto']
 
 /** GET /alertas/{id} — evento de la bitácora (id BigInt serializado a string). */
 export type EventoAlerta = {
@@ -37,10 +22,7 @@ export type AlertaDetalle = Alerta & {
 }
 
 /** PATCH /alertas/{id} — body (ResolverAlertaDto). */
-export type TransicionAlerta = {
-  estado: 'EN_ATENCION' | 'RESUELTA' | 'CANCELADA'
-  detalle?: string
-}
+export type TransicionAlerta = components['schemas']['ResolverAlertaDto']
 
 /** Uso directo de apiClient (feature alertas, sin módulo api separado). */
 export const alertasApi = {
@@ -85,10 +67,12 @@ export const clavesAlertas = {
  */
 export function useAlertas(
   params: { adultoId?: string; estado?: string; limite?: number } = {},
+  refetchInterval: number | false = false,
 ) {
   return useQuery({
     queryKey: clavesAlertas.lista(params),
     queryFn: () => alertasApi.listar(params),
+    refetchInterval,
   })
 }
 
@@ -107,7 +91,7 @@ export function useEliminarAlerta() {
   return useMutation({
     mutationFn: (id: string) => alertasApi.eliminar(id),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: clavesAlertas.todos })
+      return queryClient.invalidateQueries({ queryKey: clavesAlertas.todos })
     },
   })
 }
@@ -120,7 +104,7 @@ export function useActualizarAlerta() {
     mutationFn: ({ id, cuerpo }: { id: string; cuerpo: TransicionAlerta }) =>
       alertasApi.actualizar(id, cuerpo),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: clavesAlertas.todos })
+      return queryClient.invalidateQueries({ queryKey: clavesAlertas.todos })
     },
   })
 }

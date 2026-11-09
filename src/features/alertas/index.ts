@@ -1,3 +1,7 @@
 export { AlertasAdminPage } from './pages/alertas-admin-page'
 export { AlertasPage } from './pages/alertas-page'
 export { AvisosAlertasProvider } from './components/avisos-alertas'
+export { AccionesAlerta } from './components/acciones-alerta'
+export { useAlertas } from './api/alertas.api'
+export type { Alerta } from './api/alertas.api'
+export { useAlertasEnVivo } from './hooks/use-alertas-en-vivo'
